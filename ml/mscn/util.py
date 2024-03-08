@@ -156,3 +156,18 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
             join_vec = join2vec[predicate]
             joins_enc[i].append(join_vec)
     return predicates_enc, joins_enc
+
+def print_qerror(preds_unnorm, labels_unnorm):
+    qerror = []
+    for i in range(len(preds_unnorm)):
+        if preds_unnorm[i] > float(labels_unnorm[i]):
+            qerror.append(preds_unnorm[i] / float(labels_unnorm[i]))
+        else:
+            qerror.append(float(labels_unnorm[i]) / float(preds_unnorm[i]))
+
+    print("Median: {}".format(np.median(qerror)))
+    print("90th percentile: {}".format(np.percentile(qerror, 90)))
+    print("95th percentile: {}".format(np.percentile(qerror, 95)))
+    print("99th percentile: {}".format(np.percentile(qerror, 99)))
+    print("Max: {}".format(np.max(qerror)))
+    print("Mean: {}".format(np.mean(qerror)))
