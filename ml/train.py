@@ -11,6 +11,8 @@ from mscn.data import get_train_datasets, load_data, make_dataset
 from mscn.model import SetConv
 from predict import predict
 
+import pandas as pd
+
 
 def unnormalize_torch(vals, min_val, max_val):
     vals = (vals * (max_val - min_val)) + min_val
@@ -72,6 +74,9 @@ def train(num_queries, num_epochs, batch_size, hid_units, cuda):
     train_data_loader = DataLoader(train_data, batch_size=batch_size)
     test_data_loader = DataLoader(test_data, batch_size=batch_size)
 
+    # Init data for visualization
+    train_qerrors, val_qerrors = [], []
+
     best_val_qerror = float('inf')
     model_checkpoint_path = os.path.join('checkpoints', 'model.pth')
 
@@ -100,9 +105,11 @@ def train(num_queries, num_epochs, batch_size, hid_units, cuda):
 
         # Training Q-Error
         train_qerror = loss_total / len(train_data_loader)
+        train_qerrors.append(train_qerror)
 
         # Validation Q-Error
         val_qerror = validate(model, test_data_loader, cuda, min_val, max_val)
+        val_qerrors.append(val_qerror)
 
         print(f"Epoch {epoch}, Training loss: {train_qerror}, Validation loss: {val_qerror}")
 
@@ -124,7 +131,14 @@ def train(num_queries, num_epochs, batch_size, hid_units, cuda):
             }, model_checkpoint_path)
 
             print(f"New best model saved for epoch {epoch} at {os.path.abspath(model_checkpoint_path)}")
-
+    
+    if not os.path.exists("./dataframes"):
+        os.makedirs("./dataframes", exist_ok=True)
+    
+    # Save the model training as a DataFrame
+    df = pd.DataFrame({'training_loss': train_qerrors, 'validation_loss': val_qerrors, 'epochs': num_epochs})
+    df.to_pickle("./dataframes/model_training.pkl")
+    print(f"Model training saved as DataFrame at {os.path.abspath('./dataframes/model_training.pkl')}")
 
     # Get final training and validation set predictions
     preds_train, t_total = predict(model, train_data_loader, cuda)
