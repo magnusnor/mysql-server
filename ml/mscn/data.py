@@ -5,7 +5,32 @@ from torch.utils.data import dataset
 from mscn.util import *
 
 
-def load_data(file_name, num_materialized_samples):
+def load_data(file_name):
+    joins = []
+    predicates = []
+    tables = []
+    label = []
+
+    # Load queries
+    with open(file_name + ".csv", 'r', newline='') as f:
+        data_raw = list(list(rec) for rec in csv.reader(f, delimiter='#'))
+        for row in data_raw:
+            tables.append(row[0].split(','))
+            joins.append(row[1].split(','))
+            predicates.append(row[2].split(','))
+            if int(row[3]) < 1:
+                print("Queries must have non-zero cardinalities")
+                exit(1)
+            label.append(row[3])
+    print("Loaded queries")
+
+    # Split predicates
+    predicates = [list(chunks(d, 3)) for d in predicates]
+
+    return joins, predicates, tables, label
+
+
+def load_data_with_sampling(file_name, num_materialized_samples):
     joins = []
     predicates = []
     tables = []
@@ -55,7 +80,10 @@ def load_and_encode_train_data(num_queries, num_materialized_samples):
     file_name_queries = "data/train"
     file_name_column_min_max_vals = "data/column_min_max_vals.csv"
 
-    joins, predicates, tables, samples, label = load_data(file_name_queries, num_materialized_samples)
+    if (num_materialized_samples > 0):
+        joins, predicates, tables, samples, label = load_data_with_sampling(file_name_queries, num_materialized_samples)
+    else:
+        joins, predicates, tables, label = load_data(file_name_queries)
 
     # Get column name dict
     column_names = get_all_column_names(predicates)
@@ -83,7 +111,10 @@ def load_and_encode_train_data(num_queries, num_materialized_samples):
             column_min_max_vals[row[0]] = [float(row[1]), float(row[2])]
 
     # Get feature encoding and proper normalization
-    samples_enc = encode_samples(tables, samples, table2vec)
+    if (num_materialized_samples > 0):
+        samples_enc = encode_samples(tables, samples, table2vec)
+    else:
+        tables_enc = encode_tables(tables, table2vec)
     predicates_enc, joins_enc = encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec)
     label_norm, min_val, max_val = normalize_labels(label)
 
@@ -91,12 +122,18 @@ def load_and_encode_train_data(num_queries, num_materialized_samples):
     num_train = int(num_queries * 0.9)
     num_test = num_queries - num_train
 
-    samples_train = samples_enc[:num_train]
+    if (num_materialized_samples > 0):
+        samples_train = samples_enc[:num_train]
+    else:
+        tables_train = tables_enc[:num_train]
     predicates_train = predicates_enc[:num_train]
     joins_train = joins_enc[:num_train]
     labels_train = label_norm[:num_train]
 
-    samples_test = samples_enc[num_train:num_train + num_test]
+    if (num_materialized_samples > 0):
+        samples_test = samples_enc[num_train:num_train + num_test]
+    else:
+        tables_test = tables_enc[num_train:num_train + num_test]
     predicates_test = predicates_enc[num_train:num_train + num_test]
     joins_test = joins_enc[num_train:num_train + num_test]
     labels_test = label_norm[num_train:num_train + num_test]
@@ -108,28 +145,32 @@ def load_and_encode_train_data(num_queries, num_materialized_samples):
     max_num_predicates = max(max([len(p) for p in predicates_train]), max([len(p) for p in predicates_test]))
 
     dicts = [table2vec, column2vec, op2vec, join2vec]
-    train_data = [samples_train, predicates_train, joins_train]
-    test_data = [samples_test, predicates_test, joins_test]
+    if (num_materialized_samples > 0):
+        train_data = [samples_train, predicates_train, joins_train]
+        test_data = [samples_test, predicates_test, joins_test]
+    else:
+        train_data = [tables_train, predicates_train, joins_train]
+        test_data = [tables_test, predicates_test, joins_test]
     return dicts, column_min_max_vals, min_val, max_val, labels_train, labels_test, max_num_joins, max_num_predicates, train_data, test_data
 
 
-def make_dataset(samples, predicates, joins, labels, max_num_joins, max_num_predicates):
+def make_dataset(tables, predicates, joins, labels, max_num_joins, max_num_predicates):
     """Add zero-padding and wrap as tensor dataset."""
 
-    sample_masks = []
-    sample_tensors = []
-    for sample in samples:
-        sample_tensor = np.vstack(sample)
-        num_pad = max_num_joins + 1 - sample_tensor.shape[0]
-        sample_mask = np.ones_like(sample_tensor).mean(1, keepdims=True)
-        sample_tensor = np.pad(sample_tensor, ((0, num_pad), (0, 0)), 'constant')
-        sample_mask = np.pad(sample_mask, ((0, num_pad), (0, 0)), 'constant')
-        sample_tensors.append(np.expand_dims(sample_tensor, 0))
-        sample_masks.append(np.expand_dims(sample_mask, 0))
-    sample_tensors = np.vstack(sample_tensors)
-    sample_tensors = torch.FloatTensor(sample_tensors)
-    sample_masks = np.vstack(sample_masks)
-    sample_masks = torch.FloatTensor(sample_masks)
+    table_masks = []
+    table_tensors = []
+    for table in tables:
+        table_tensor = np.vstack(table)
+        num_pad = max_num_joins + 1 - table_tensor.shape[0]
+        table_mask = np.ones_like(table_tensor).mean(1, keepdims=True)
+        table_tensor = np.pad(table_tensor, ((0, num_pad), (0, 0)), 'constant')
+        table_mask = np.pad(table_mask, ((0, num_pad), (0, 0)), 'constant')
+        table_tensors.append(np.expand_dims(table_tensor, 0))
+        table_masks.append(np.expand_dims(table_mask, 0))
+    table_tensors = np.vstack(table_tensors)
+    table_tensors = torch.FloatTensor(table_tensors)
+    table_masks = np.vstack(table_masks)
+    table_masks = torch.FloatTensor(table_masks)
 
     predicate_masks = []
     predicate_tensors = []
@@ -163,7 +204,7 @@ def make_dataset(samples, predicates, joins, labels, max_num_joins, max_num_pred
 
     target_tensor = torch.FloatTensor(labels)
 
-    return dataset.TensorDataset(sample_tensors, predicate_tensors, join_tensors, target_tensor, sample_masks,
+    return dataset.TensorDataset(table_tensors, predicate_tensors, join_tensors, target_tensor, table_masks,
                                  predicate_masks, join_masks)
 
 

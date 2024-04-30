@@ -127,9 +127,24 @@ def encode_samples(tables, samples, table2vec):
     return samples_enc
 
 
+def encode_tables(tables, table2vec):
+    tables_enc = []
+    for i, query in enumerate(tables):
+        query_enc = []
+        for table in query:
+            table_vec = np.array(table2vec[table])
+            query_enc.append(table_vec)
+        tables_enc.append(query_enc)
+    return tables_enc
+
+
 def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec):
     predicates_enc = []
     joins_enc = []
+    # print(f"Columns: {column2vec}")
+    # print(f"Operators: {op2vec}")
+    # print(f"Joins: {join2vec}")
+    # print(f"column_min_max_vals: {column_min_max_vals}")
     for i, query in enumerate(predicates):
         predicates_enc.append(list())
         joins_enc.append(list())
@@ -157,6 +172,20 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
             joins_enc[i].append(join_vec)
     return predicates_enc, joins_enc
 
+
+def ensure_vector_length(vectors, target_length):
+    return [np.pad(vector, (0, max(0, target_length - len(vector))), 'constant', constant_values=0)
+            if len(vector) < target_length else vector[:target_length] for vector in vectors]
+
+
+def pad_data(data, feature_size):
+    padded_data = []
+    for entry in data:
+        padded_entry = ensure_vector_length(entry, feature_size)
+        padded_data.append(np.array(padded_entry))
+    return padded_data
+
+
 def print_qerror(preds_unnorm, labels_unnorm):
     qerror = []
     for i in range(len(preds_unnorm)):
@@ -171,3 +200,8 @@ def print_qerror(preds_unnorm, labels_unnorm):
     print("99th percentile: {}".format(np.percentile(qerror, 99)))
     print("Max: {}".format(np.max(qerror)))
     print("Mean: {}".format(np.mean(qerror)))
+
+def print_workload_name(name):
+    top_bottom = "+" + "-" * (len(name) + 2) + "+"
+    middle = "| " + name + " |"
+    return f"{top_bottom}\n{middle}\n{top_bottom}"

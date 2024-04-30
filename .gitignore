@@ -17,6 +17,7 @@ TAGS_sorted_by_file
 .vscode/
 
 build/
+build-release/
 datatool/
 datatools/
 __pycache__/
@@ -28,5 +29,8 @@ scalability_jobs_*
 .cproject
 .project
 .settings/
+.idea/
 
 /ml/results
+/ml/images
+/ml/logs
