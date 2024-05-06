@@ -201,12 +201,12 @@ def plot_q_error_all_workloads(save=False):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--workload", help="synthetic, synthetic-sampling, scale, scale-sampling, job-light, job-light-sampling (default: job-light)", type=str, default="job-light")
-    parser.add_argument("--all-workloads", help="plot metrics for all workloads", type=bool, default=False)
-    parser.add_argument("--sub-plans", help="use sub-plans", type=bool, default=False)
-    parser.add_argument("--sampling", help="use workload with materialized base samples", type=bool, default=False)
-    parser.add_argument("--compare-sampling", help="plot metrics for workload with and without sampling", type=bool, default=False)
     parser.add_argument("--plot-type", help="bar, box (default: bar)", type=str, default="box")
-    parser.add_argument("--save-plot", help="save figure", type=bool, default=False)
+    parser.add_argument("--all-workloads", help="plot metrics for all workloads", action="store_true")
+    parser.add_argument("--sub-plans", help="use sub-plans", action="store_true")
+    parser.add_argument("--sampling", help="use workload with materialized base samples", action="store_true")
+    parser.add_argument("--compare-sampling", help="plot metrics for workload with and without sampling", action="store_true")
+    parser.add_argument("--save-plot", help="save figure", action="store_true")
     args = parser.parse_args()
     if (args.all_workloads):
         plot_q_error_all_workloads(args.save_plot)

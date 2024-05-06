@@ -73,8 +73,10 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
+    print(f"CUDA is available: {torch.cuda.is_available()}")
     if cuda:
         model.cuda()
+        print("Using CUDA")
 
     train_data_loader = DataLoader(train_data, batch_size=batch_size)
     test_data_loader = DataLoader(test_data, batch_size=batch_size)
