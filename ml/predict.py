@@ -117,8 +117,6 @@ def predict_workload(workload_name, num_materialized_samples, num_queries, batch
 
             _, min_val, max_val = normalize_labels(label)
 
-            print(f"Test: {column_min_max_vals}")
-
             # Get feature encoding and proper normalization
             tables_test = encode_tables(tables, table2vec)
             predicates_test, joins_test = encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec)
