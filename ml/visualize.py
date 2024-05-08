@@ -10,9 +10,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from dotenv import load_dotenv
+load_dotenv()
+
 dataframes_folder_path = "./dataframes/"
 results_folder_path = "./results/"
-benchmark_results_folder_path = "/home/magnus/dev/priv/benchmark/results/"
+BENCHMARK_RESULTS_PATH = os.environ["BENCHMARK_RESULTS_PATH"]
 
 sns.set_style("white")
 sns.color_palette("deep")
@@ -46,9 +49,9 @@ def calculate_q_error(estimated, real):
 
 def get_mysql_q_error_for_workload(workload, sub_plans=False):
     if (sub_plans):
-        results_folder_path = f"{benchmark_results_folder_path}{workload}/sub_plan_queries/baseline"
+        results_folder_path = f"{BENCHMARK_RESULTS_PATH}/{workload}/sub_plan_queries/baseline"
     else:
-        results_folder_path = f"{benchmark_results_folder_path}{workload}/baseline"
+        results_folder_path = f"{BENCHMARK_RESULTS_PATH}/{workload}/baseline"
     if (not os.path.exists(results_folder_path)):
         return None
     dfs = {}

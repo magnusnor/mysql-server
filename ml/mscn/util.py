@@ -141,10 +141,6 @@ def encode_tables(tables, table2vec):
 def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec):
     predicates_enc = []
     joins_enc = []
-    # print(f"Columns: {column2vec}")
-    # print(f"Operators: {op2vec}")
-    # print(f"Joins: {join2vec}")
-    # print(f"column_min_max_vals: {column_min_max_vals}")
     for i, query in enumerate(predicates):
         predicates_enc.append(list())
         joins_enc.append(list())

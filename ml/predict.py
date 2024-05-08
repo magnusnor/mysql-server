@@ -1,7 +1,6 @@
 import argparse
 import time
 import os
-import csv
 
 import torch
 from torch.autograd import Variable
@@ -10,6 +9,7 @@ from torch.utils.data import DataLoader
 from mscn.util import *
 from mscn.data import get_train_datasets, load_data, load_data_with_sampling, make_dataset
 from mscn.model import SetConv
+
 
 def predict_dataset(model, data_loader, cuda):
     """
@@ -46,7 +46,9 @@ def predict_workload(workload_name, num_materialized_samples, num_queries, batch
     Predicts the cardinality for each query in a given workload.
     Writes the results to a CSV file.
     """
-    file_name_column_min_max_vals = "data/column_min_max_vals.csv"
+    # file_name_column_min_max_vals = "data/column_min_max_vals.csv"
+
+    print(f"Number of materialized base table samples: {num_materialized_samples}")
 
     if (num_materialized_samples > 0):
         checkpoint_path = 'checkpoints/model_sampling.pth'
@@ -70,68 +72,28 @@ def predict_workload(workload_name, num_materialized_samples, num_queries, batch
 
         print(f"Workload:\n{print_workload_name(workload_name)}")
 
+        dicts, column_min_max_vals, min_val, max_val, _, labels_test, _, _, _, test_data = get_train_datasets(num_queries, num_materialized_samples)
+        table2vec, column2vec, op2vec, join2vec = dicts
+
         if (num_materialized_samples > 0):
-            dicts, column_min_max_vals, min_val, max_val, _, labels_test, _, _, _, test_data = get_train_datasets(num_queries, num_materialized_samples)
-            table2vec, column2vec, op2vec, join2vec = dicts
-
             joins, predicates, tables, samples, label = load_data_with_sampling(file_name, num_materialized_samples)
-
             samples_test = encode_samples(tables, samples, table2vec)
-            predicates_test, joins_test = encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec)
-            labels_test, _, _ = normalize_labels(label, min_val, max_val)
-
-            print("Number of test samples: {}".format(len(labels_test)))
-
-            max_num_predicates = max([len(p) for p in predicates_test])
-            max_num_joins = max([len(j) for j in joins_test])
-
-            # Get test set predictions
-            test_data = make_dataset(samples_test, predicates_test, joins_test, labels_test, max_num_joins, max_num_predicates)
         else:
             joins, predicates, tables, label = load_data(file_name)
-
-            # Get column name dict
-            column_names = get_all_column_names(predicates)
-            column2vec, idx2column = get_set_encoding(column_names)
-
-            # Get table name dict
-            table_names = get_all_table_names(tables)
-            table2vec, idx2table = get_set_encoding(table_names)
-
-            # Get operator name dict
-            operators = get_all_operators(predicates)
-            op2vec, idx2op = get_set_encoding(operators)
-
-            # Get join name dict
-            join_set = get_all_joins(joins)
-            join2vec, idx2join = get_set_encoding(join_set)
-
-            # Get min and max values for each column
-            with open(file_name_column_min_max_vals, 'r', newline='') as f:
-                data_raw = list(list(rec) for rec in csv.reader(f, delimiter=','))
-                column_min_max_vals = {}
-                for i, row in enumerate(data_raw):
-                    if i == 0:
-                        continue
-                    column_min_max_vals[row[0]] = [float(row[1]), float(row[2])]
-
-            _, min_val, max_val = normalize_labels(label)
-
-            # Get feature encoding and proper normalization
             tables_test = encode_tables(tables, table2vec)
-            predicates_test, joins_test = encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec)
-            labels_test, _, _ = normalize_labels(label, min_val, max_val)
+        
+        predicates_test, joins_test = encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec)
+        labels_test, _, _ = normalize_labels(label, min_val, max_val)
 
-            print("Number of test samples: {}".format(len(labels_test)))
+        print("Number of test samples: {}".format(len(labels_test)))
 
-            max_num_predicates = max([len(p) for p in predicates_test])
-            max_num_joins = max([len(j) for j in joins_test])
+        max_num_predicates = max([len(p) for p in predicates_test])
+        max_num_joins = max([len(j) for j in joins_test])
 
-            tables_test = pad_data(tables_test, 6)
-            predicates_test = pad_data(predicates_test, 13)
-            joins_test = pad_data(joins_test, 6)
-
-            # Get test set predictions
+        # Get test set predictions
+        if (num_materialized_samples > 0):
+            test_data = make_dataset(samples_test, predicates_test, joins_test, labels_test, max_num_joins, max_num_predicates)
+        else:
             test_data = make_dataset(tables_test, predicates_test, joins_test, labels_test, max_num_joins, max_num_predicates)
 
         test_data_loader = DataLoader(test_data, batch_size=batch_size)
@@ -163,13 +125,13 @@ def predict_query(num_materialized_samples):
     #TODO: Get inputs from MySQL and run inference.
 
     if (num_materialized_samples > 0):
-        checkpoint_path = '/home/magnus/dev/priv/mysql-server/ml/checkpoints/model_sampling.pth'
+        checkpoint_path = "checkpoints/model_sampling.pth"
     else:
-        checkpoint_path = '/home/magnus/dev/priv/mysql-server/ml/checkpoints/model.pth'
+        checkpoint_path = "checkpoints/model.pth"
     checkpoint = torch.load(checkpoint_path)
 
-    model = SetConv(checkpoint['sample_feats'], checkpoint['predicate_feats'], checkpoint['join_feats'], hid_units=256)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    model = SetConv(checkpoint["sample_feats"], checkpoint["predicate_feats"], checkpoint["join_feats"], hid_units=256)
+    model.load_state_dict(checkpoint["model_state_dict2"])
     model.eval()
 
     print(f"Loaded checkpoint from {os.path.abspath(checkpoint_path)}")
@@ -179,7 +141,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("workload", help="synthetic, scale, or job-light")
     parser.add_argument("--materialized-samples", help="number of materialized samples (default: 0)", type=int, default=0)
-    parser.add_argument("--queries", help="number of queries (default: 0)", type=int, default=0)
+    parser.add_argument("--queries", help="number of training queries (default: 100000)", type=int, default=100000)
     parser.add_argument("--batch", help="batch size (default: 1024)", type=int, default=1024)
     parser.add_argument("--hid", help="number of hidden units (default: 256)", type=int, default=256)
     parser.add_argument("--cuda", help="use CUDA", action="store_true")

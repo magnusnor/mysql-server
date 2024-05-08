@@ -17,6 +17,7 @@ TAGS_sorted_by_file
 .vscode/
 
 build/
+build-debug/
 build-release/
 datatool/
 datatools/
@@ -31,6 +32,10 @@ scalability_jobs_*
 .settings/
 .idea/
 
+# ML module files
 /ml/results
 /ml/images
 /ml/logs
+
+# Env files
+.env
