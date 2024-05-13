@@ -35,7 +35,10 @@ scalability_jobs_*
 # ML module files
 /ml/results
 /ml/images
-/ml/logs
+/ml/log
+
+# Log
+mysql-test/log
 
 # Env files
 .env
