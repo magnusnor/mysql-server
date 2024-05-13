@@ -19,6 +19,7 @@ BENCHMARK_RESULTS_PATH = os.environ["BENCHMARK_RESULTS_PATH"]
 sns.set_style("white")
 sns.color_palette("deep")
 
+hue_order = ["MySQL", "MSCN", "MSCN-sampling"]
 
 def save_plot(filename:str):
     images_folder_path = "./images/"
@@ -46,13 +47,14 @@ def combine_predictions(workload, sampling=False, sub_plans=False):
     
     if sampling:
         suffixes.append('-sampling')
-    if sub_plans:
-        suffixes.append('-sub-queries')
     
     dfs = {}
     
     for suffix in suffixes:
-        dfs[f"MSCN{suffix}"] = load_and_process_prediction(workload, suffix)
+        if sub_plans:
+            dfs[f"MSCN{suffix}"] = load_and_process_prediction(workload, f"{suffix}-sub-queries")
+        else:
+            dfs[f"MSCN{suffix}"] = load_and_process_prediction(workload, suffix)
     
     df_baseline = get_mysql_q_error_for_workload(workload, sub_plans)
     dfs["MySQL"] = df_baseline
@@ -122,15 +124,15 @@ def plot_q_error_for_workload(workload, plot_type="box", sampling=False, sub_pla
     suffixes = []
 
     df_combined = combine_predictions(workload, sampling, sub_plans)
-    df_sorted = df_combined.sort_values(by='q-error', ascending=False)
+    df_sorted = df_combined.sort_values(by="q-error", ascending=False).sort_values(by="model", ascending=False)
 
     if (plot_type == "box"):
-        sns.boxplot(data=df_sorted, x="model", y="q-error", hue="model")
+        sns.boxplot(data=df_sorted, x="model", y="q-error", hue="model", hue_order=hue_order)
         plt.yscale("log")
         plt.xlabel("")
         plt.ylabel("Q-Error")
     elif (plot_type == "bar"):
-        sns.barplot(data=df_sorted, x="q-error", y="query", hue="model", dodge=False, alpha=0.7, edgecolor='black', orient="h")
+        sns.barplot(data=df_sorted, x="q-error", y="query", hue="model", dodge=False, alpha=0.7, edgecolor='black', orient="h", hue_order=hue_order)
         plt.xscale("log")
         plt.xlabel("Q-Error")
         plt.ylabel("Query")
