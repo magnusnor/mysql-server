@@ -90,8 +90,7 @@ def plot_model_training(save=False):
     plt.title("Validation Loss")
     plt.xlabel("Epochs")
     plt.ylabel("Mean Q-Error")
-
-    plt.tight_layout(pad=4.0)
+    plt.tight_layout()
     if save:
         save_plot("model_training.pdf")
     else:
@@ -125,6 +124,7 @@ def plot_q_error_for_workload(workload, plot_type="box", sampling=False, sub_pla
     plt.yscale("log")
     plt.xlabel("")
     plt.ylabel("Q-Error")
+    plt.tight_layout()
     if (save):
         if (sub_plans):
             save_plot(f"q-error-{workload}-sub-queries.pdf")
@@ -166,6 +166,7 @@ def plot_q_error_for_workload_compare_with_sampling(workload, plot_type="bar", s
     plt.yscale("log")
     plt.xlabel("")
     plt.ylabel("Q-Error")
+    plt.tight_layout()
     if (save):
         if (sub_plans):
             save_plot(f"q-error-{workload}-compare-sampling-sub-queries.pdf")
@@ -195,6 +196,7 @@ def plot_q_error_all_workloads(save=False):
     plt.yscale("log")
     plt.xlabel("")
     plt.ylabel("Q-Error")
+    plt.tight_layout()
     if (save):
         save_plot("q-error-all-workloads.pdf")
     else:
