@@ -131,7 +131,6 @@ def encode_samples(tables, samples, table2vec):
 
 
 def encode_tables(tables, table2vec):
-    logger.info(f"Tables: {tables}")
     tables_enc = []
     for i, query in enumerate(tables):
         tables_enc.append(list())
@@ -150,8 +149,6 @@ def encode_tables(tables, table2vec):
 
 
 def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec):
-    logger.info(f"Predicates: {predicates}")
-    logger.info(f"Joins: {joins}")
     predicates_enc = []
     joins_enc = []
     for i, query in enumerate(predicates):

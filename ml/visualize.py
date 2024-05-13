@@ -2,7 +2,6 @@ import os
 import pathlib
 import json
 import argparse
-import math
 
 import numpy as np
 import pandas as pd
@@ -13,8 +12,8 @@ import seaborn as sns
 from dotenv import load_dotenv
 load_dotenv()
 
-dataframes_folder_path = "./dataframes/"
-results_folder_path = "./results/"
+DATAFRAMES_PATH = "./dataframes/"
+ML_RESULTS_PATH = "./results/"
 BENCHMARK_RESULTS_PATH = os.environ["BENCHMARK_RESULTS_PATH"]
 
 sns.set_style("white")
@@ -28,23 +27,45 @@ def save_plot(filename:str):
     plt.savefig(os.path.join(images_folder_path, filename), format="pdf")
 
 
-def split_df(data_df):
-    splits = math.ceil(len(data_df) / 20)
-
-    total_rows = len(data_df)
-    rows_per_part = math.ceil(total_rows / splits)
-
-    split_dfs = [
-        data_df.iloc[i * rows_per_part : (i + 1) * rows_per_part] for i in range(splits)
-    ]
-
-    num_rows = math.ceil(splits / 3)
-    num_cols = min(splits, 3)
-    return split_dfs, num_rows, num_cols
-
-
 def calculate_q_error(estimated, real):
         return (estimated / real).combine(real / estimated, max)
+    
+def load_and_process_prediction(workload, suffix):
+    filename = f"predictions_{workload}{suffix}.csv"
+    file_path = os.path.join(ML_RESULTS_PATH, filename)
+    df = pd.read_csv(file_path, names=["estimated", "real"])
+    
+    df["q-error"] = calculate_q_error(df["estimated"], df["real"])
+    df["query"] = (df.index + 1).astype(str)
+
+    return df
+
+
+def combine_predictions(workload, sampling=False, sub_plans=False):
+    suffixes = ['']
+    
+    if sampling:
+        suffixes.append('-sampling')
+    if sub_plans:
+        suffixes.append('-sub-queries')
+    
+    dfs = {}
+    
+    for suffix in suffixes:
+        dfs[f"MSCN{suffix}"] = load_and_process_prediction(workload, suffix)
+    
+    df_baseline = get_mysql_q_error_for_workload(workload, sub_plans)
+    dfs["MySQL"] = df_baseline
+
+    dfs = {key: dfs[key] for key in sorted(dfs)}
+    df_combined = pd.DataFrame()
+    
+    for key, df in dfs.items():
+        if df is not None:
+            df["model"] = key
+            df_combined = pd.concat([df_combined, df], ignore_index=True)
+    
+    return df_combined
 
 
 def get_mysql_q_error_for_workload(workload, sub_plans=False):
@@ -74,7 +95,7 @@ def get_mysql_q_error_for_workload(workload, sub_plans=False):
 
 
 def plot_model_training(save=False):
-    df = pd.read_pickle(os.path.join(dataframes_folder_path, "model_training.pkl"))
+    df = pd.read_pickle(os.path.join(DATAFRAMES_PATH, "model_training.pkl"))
     df["epochs"] = range(1, len(df) + 1)
     df_training = df[["epochs", "training_loss"]]
     df_validation = df[["epochs", "validation_loss"]]
@@ -98,87 +119,43 @@ def plot_model_training(save=False):
 
 
 def plot_q_error_for_workload(workload, plot_type="box", sampling=False, sub_plans=False, save=False):
-    dfs = {}
-    df_combined = pd.DataFrame()
-    if (sampling):
-        df = pd.read_csv(os.path.join(results_folder_path, f"predictions_{workload}-sampling.csv"), names=["estimated", "real"])
-    elif (sub_plans):
-        df = pd.read_csv(os.path.join(results_folder_path, f"predictions_{workload}-sub-queries.csv"), names=["estimated", "real"])
-    else:
-        df = pd.read_csv(os.path.join(results_folder_path, f"predictions_{workload}.csv"), names=["estimated", "real"])
-    df["q-error"] = calculate_q_error(df["estimated"], df["real"])
-    df["query"] = df.index + 1
-    dfs["MSCN"] = df
-    df_baseline = get_mysql_q_error_for_workload(workload, sub_plans)
-    dfs["MySQL"] = df_baseline
-    dfs = {key: dfs[key] for key in sorted(dfs)}
-    for key, df in dfs.items():
-        if df is None: continue
-        df["model"] = key
-        df_combined = pd.concat([df_combined, df], ignore_index=True)
-    plt.figure(figsize=(20, 12))
-    if (plot_type == "box"):
-        sns.boxplot(data=df_combined, x="model", y="q-error", hue="model")
-    elif (plot_type == "bar"):
-        sns.barplot(data=df_combined, x="query", y="q-error", hue="model", alpha=0.7)
-    plt.yscale("log")
-    plt.xlabel("")
-    plt.ylabel("Q-Error")
-    plt.tight_layout()
-    if (save):
-        if (sub_plans):
-            save_plot(f"q-error-{workload}-sub-queries.pdf")
-        else:
-            save_plot(f"q-error-{workload}.pdf")
-    else:
-        plt.show()
+    suffixes = []
 
+    df_combined = combine_predictions(workload, sampling, sub_plans)
+    df_sorted = df_combined.sort_values(by='q-error', ascending=False)
 
-def plot_q_error_for_workload_compare_with_sampling(workload, plot_type="bar", sub_plans=False, save=False):
-    dfs = {}
-    df_combined = pd.DataFrame()
-    if (sub_plans):
-        df = pd.read_csv(os.path.join(results_folder_path, f"predictions_{workload}-sub-queries.csv"), names=["estimated", "real"])
-    else:
-        df = pd.read_csv(os.path.join(results_folder_path, f"predictions_{workload}.csv"), names=["estimated", "real"])
-    df["q-error"] = calculate_q_error(df["estimated"], df["real"])
-    df["query"] = df.index + 1
-    dfs["MSCN"] = df
-    if (sub_plans):
-        df_sampling = pd.read_csv(os.path.join(results_folder_path, f"predictions_{workload}-sub-queries-sampling.csv"), names=["estimated", "real"])
-    else:
-        df_sampling = pd.read_csv(os.path.join(results_folder_path, f"predictions_{workload}-sampling.csv"), names=["estimated", "real"])
-    df_sampling["q-error"] = calculate_q_error(df_sampling["estimated"], df_sampling["real"])
-    df_sampling["query"] = df_sampling.index + 1
-    dfs["MSCN (with sampling)"] = df_sampling
-    df_baseline = get_mysql_q_error_for_workload(workload, sub_plans)
-    dfs["MySQL"] = df_baseline
-    dfs = {key: dfs[key] for key in sorted(dfs)}
-    for key, df in dfs.items():
-        if df is None: continue
-        df["model"] = key
-        df_combined = pd.concat([df_combined, df], ignore_index=True)
-    plt.figure(figsize=(20, 12))
     if (plot_type == "box"):
-        sns.boxplot(data=df_combined, x="model", y="q-error", hue="model")
+        sns.boxplot(data=df_sorted, x="model", y="q-error", hue="model")
+        plt.yscale("log")
+        plt.xlabel("")
+        plt.ylabel("Q-Error")
     elif (plot_type == "bar"):
-        sns.barplot(data=df_combined, x="query", y="q-error", hue="model", alpha=0.7)
-    plt.yscale("log")
-    plt.xlabel("")
-    plt.ylabel("Q-Error")
+        sns.barplot(data=df_sorted, x="q-error", y="query", hue="model", dodge=False, alpha=0.7, edgecolor='black', orient="h")
+        plt.xscale("log")
+        plt.xlabel("Q-Error")
+        plt.ylabel("Query")
+
     plt.tight_layout()
-    if (save):
-        if (sub_plans):
-            save_plot(f"q-error-{workload}-compare-sampling-sub-queries.pdf")
-        else:
-            save_plot(f"q-error-{workload}-compare-sampling.pdf")
+
+    if sub_plans:
+        suffixes.append("-sub-queries")
+    if sampling:
+        suffixes.append("-compare-sampling")
+    if plot_type == "bar":
+        suffixes.append("-bar")
+
+    suffix = ''.join(suffixes)
+    
+    if save:
+        filename = f"q-error-{workload}{suffix}.pdf"
+        save_plot(filename)
     else:
         plt.show()
 
 
 def plot_q_error_all_workloads(save=False):
     dfs = {}
-    for path in pathlib.Path(results_folder_path).glob("*.csv"):
+    for path in pathlib.Path(ML_RESULTS_PATH).glob("*.csv"):
         with open(str(path)) as f:
             df = pd.read_csv(str(path), names=["estimated", "real"])
             name = str(path.stem).removeprefix("predictions_")
@@ -191,7 +168,6 @@ def plot_q_error_all_workloads(save=False):
         df["workload"] = key
         df_combined = pd.concat([df_combined, df], ignore_index=True)
     
-    plt.figure(figsize=(20, 12))
     sns.boxplot(data=df_combined, x="workload", y="q-error", hue="workload")
     plt.yscale("log")
     plt.xlabel("")
@@ -209,16 +185,13 @@ def main():
     parser.add_argument("--plot-type", help="bar, box (default: bar)", type=str, default="box")
     parser.add_argument("--all-workloads", help="plot metrics for all workloads", action="store_true")
     parser.add_argument("--sub-plans", help="use sub-plans", action="store_true")
-    parser.add_argument("--sampling", help="use workload with materialized base samples", action="store_true")
-    parser.add_argument("--compare-sampling", help="plot metrics for workload with and without sampling", action="store_true")
+    parser.add_argument("--compare-sampling", help="compare workload with and without materialized base samples", action="store_true")
     parser.add_argument("--save-plot", help="save figure", action="store_true")
     args = parser.parse_args()
     if (args.all_workloads):
         plot_q_error_all_workloads(args.save_plot)
-    elif (args.compare_sampling):
-        plot_q_error_for_workload_compare_with_sampling(args.workload, args.plot_type, args.sub_plans, args.save_plot)
     else:
-        plot_q_error_for_workload(args.workload, args.plot_type, args.sampling, args.sub_plans, args.save_plot)
+        plot_q_error_for_workload(args.workload, args.plot_type, args.compare_sampling, args.sub_plans, args.save_plot)
     
 
 if __name__ == "__main__":
