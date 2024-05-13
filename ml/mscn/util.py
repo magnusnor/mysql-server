@@ -1,4 +1,7 @@
 import numpy as np
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 # Helper functions for data processing
@@ -128,17 +131,27 @@ def encode_samples(tables, samples, table2vec):
 
 
 def encode_tables(tables, table2vec):
+    logger.info(f"Tables: {tables}")
     tables_enc = []
     for i, query in enumerate(tables):
-        query_enc = []
+        tables_enc.append(list())
         for table in query:
-            table_vec = np.array(table2vec[table])
-            query_enc.append(table_vec)
-        tables_enc.append(query_enc)
+            table_vec = []
+            try:
+                table_vec.append(table2vec[table])
+            except KeyError as e:
+                # If the table does not exist in the training data (unseen query feature),
+                # initialize a zero vector.
+                table_vec.append(np.zeros(len(table2vec)))
+                logger.error(f"No mapping found for table: {table}")
+                logger.error(e)
+        tables_enc[i].append(table_vec)
     return tables_enc
 
 
 def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec):
+    logger.info(f"Predicates: {predicates}")
+    logger.info(f"Joins: {joins}")
     predicates_enc = []
     joins_enc = []
     for i, query in enumerate(predicates):
@@ -153,8 +166,22 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
                 norm_val = normalize_data(val, column, column_min_max_vals)
 
                 pred_vec = []
-                pred_vec.append(column2vec[column])
-                pred_vec.append(op2vec[operator])
+                try:
+                    pred_vec.append(column2vec[column])
+                except KeyError as e:
+                    # If the column does not exist in the training data (unseen query feature),
+                    # initialize a zero vector.
+                    pred_vec.append(np.zeros(len(column2vec)))
+                    logger.error(f"No mapping found for column: {column}")
+                    logger.error(e)
+                try:
+                    pred_vec.append(op2vec[operator])
+                except KeyError as e:
+                    # If the operator does not exist in the training data (unseen query feature),
+                    # initialize a zero vector.
+                    pred_vec.append(np.zeros(len(op2vec)))
+                    logger.error(f"No mapping found for operator: {operator}")
+                    logger.error(e)
                 pred_vec.append(norm_val)
                 pred_vec = np.hstack(pred_vec)
             else:
@@ -164,23 +191,16 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
 
         for predicate in joins[i]:
             # Join instruction
-            join_vec = join2vec[predicate]
+            try:
+                join_vec = join2vec[predicate]
+            except KeyError as e:
+                # If the join condition does not exist in the training data (unseen query feature),
+                # initialize a zero vector.
+                join_vec = np.zeros((len(join2vec)))
+                logger.error(f"No mapping found for join: {predicate}")
+                logger.error(e)
             joins_enc[i].append(join_vec)
     return predicates_enc, joins_enc
-
-
-def ensure_vector_length(vectors, target_length):
-    return [np.pad(vector, (0, max(0, target_length - len(vector))), 'constant', constant_values=0)
-            if len(vector) < target_length else vector[:target_length] for vector in vectors]
-
-
-def pad_data(data, feature_size):
-    padded_data = []
-    for entry in data:
-        padded_entry = ensure_vector_length(entry, feature_size)
-        padded_data.append(np.array(padded_entry))
-    return padded_data
-
 
 def print_qerror(preds_unnorm, labels_unnorm):
     qerror = []

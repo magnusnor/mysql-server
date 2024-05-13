@@ -154,9 +154,7 @@ def load_and_encode_train_data(num_queries, num_materialized_samples):
     return dicts, column_min_max_vals, min_val, max_val, labels_train, labels_test, max_num_joins, max_num_predicates, train_data, test_data
 
 
-def make_dataset(tables, predicates, joins, labels, max_num_joins, max_num_predicates):
-    """Add zero-padding and wrap as tensor dataset."""
-
+def make_tensors(tables, predicates, joins, max_num_joins, max_num_predicates):
     table_masks = []
     table_tensors = []
     for table in tables:
@@ -202,10 +200,17 @@ def make_dataset(tables, predicates, joins, labels, max_num_joins, max_num_predi
     join_masks = np.vstack(join_masks)
     join_masks = torch.FloatTensor(join_masks)
 
+    return table_tensors, predicate_tensors, join_tensors, table_masks, predicate_masks, join_masks
+
+
+def make_dataset(tables, predicates, joins, labels, max_num_joins, max_num_predicates):
+    """Add zero-padding and wrap as tensor dataset."""
+
+    table_tensors, predicate_tensors, join_tensors, table_masks, predicate_masks, join_masks = make_tensors(tables, predicates, joins, max_num_joins, max_num_predicates)
+
     target_tensor = torch.FloatTensor(labels)
 
-    return dataset.TensorDataset(table_tensors, predicate_tensors, join_tensors, target_tensor, table_masks,
-                                 predicate_masks, join_masks)
+    return dataset.TensorDataset(table_tensors, predicate_tensors, join_tensors, target_tensor, table_masks, predicate_masks, join_masks)
 
 
 def get_train_datasets(num_queries, num_materialized_samples):
