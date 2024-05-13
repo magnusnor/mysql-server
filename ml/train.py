@@ -54,7 +54,7 @@ def validate(model, val_data_loader, cuda, min_val, max_val):
 
 def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_units, cuda):
     # Load training and validation data
-    dicts, column_min_max_vals, min_val, max_val, labels_train, labels_test, _, _, train_data, test_data = get_train_datasets(
+    dicts, column_min_max_vals, min_val, max_val, labels_train, labels_test, max_num_joins, max_num_predicates, train_data, test_data = get_train_datasets(
         num_queries, num_materialized_samples)
     table2vec, column2vec, op2vec, join2vec = dicts
 
@@ -143,6 +143,12 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
+                'dicts': dicts,
+                'column_min_max_vals': column_min_max_vals,
+                'max_num_joins': max_num_joins,
+                'max_num_predicates': max_num_predicates,
+                'min_val': min_val,
+                'max_val': max_val,
                 'sample_feats': sample_feats,
                 'predicate_feats': predicate_feats,
                 'join_feats': join_feats,
@@ -152,6 +158,12 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
+                    'dicts': dicts,
+                    'column_min_max_vals': column_min_max_vals,
+                    'max_num_joins': max_num_joins,
+                    'max_num_predicates': max_num_predicates,
+                    'min_val': min_val,
+                    'max_val': max_val,
                     'table_feats': table_feats,
                     'predicate_feats': predicate_feats,
                     'join_feats': join_feats,
