@@ -19,7 +19,7 @@ BENCHMARK_RESULTS_PATH = os.environ["BENCHMARK_RESULTS_PATH"]
 sns.set_style("white")
 sns.color_palette("deep")
 
-hue_order = ["MySQL", "MSCN", "MSCN-sampling"]
+preferred_hue_order = ["MySQL", "MSCN", "MSCN-sampling"]
 
 def save_plot(filename:str):
     images_folder_path = "./images/"
@@ -124,7 +124,9 @@ def plot_q_error_for_workload(workload, plot_type="box", sampling=False, sub_pla
     suffixes = []
 
     df_combined = combine_predictions(workload, sampling, sub_plans)
-    df_sorted = df_combined.sort_values(by="q-error", ascending=False).sort_values(by="model", ascending=False)
+    distinct_models = df_combined['model'].unique()
+    hue_order = [model for model in preferred_hue_order if model in distinct_models]
+    df_sorted = df_combined.sort_values(by="model", ascending=False).sort_values(by="q-error", ascending=False)
 
     if (plot_type == "box"):
         sns.boxplot(data=df_sorted, x="model", y="q-error", hue="model", hue_order=hue_order)
