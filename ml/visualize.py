@@ -59,7 +59,6 @@ def combine_predictions(workload, sampling=False, sub_plans=False):
     df_baseline = get_mysql_q_error_for_workload(workload, sub_plans)
     dfs["MySQL"] = df_baseline
 
-    dfs = {key: dfs[key] for key in sorted(dfs)}
     df_combined = pd.DataFrame()
     
     for key, df in dfs.items():
@@ -126,15 +125,16 @@ def plot_q_error_for_workload(workload, plot_type="box", sampling=False, sub_pla
     df_combined = combine_predictions(workload, sampling, sub_plans)
     distinct_models = df_combined['model'].unique()
     hue_order = [model for model in preferred_hue_order if model in distinct_models]
-    df_sorted = df_combined.sort_values(by="model", ascending=False).sort_values(by="q-error", ascending=False)
+    df_combined["model"] = pd.Categorical(df_combined['model'], categories=hue_order, ordered=True)
 
     if (plot_type == "box"):
-        sns.boxplot(data=df_sorted, x="model", y="q-error", hue="model", hue_order=hue_order)
+        sns.boxplot(data=df_combined, x="model", y="q-error", hue="model")
         plt.yscale("log")
         plt.xlabel("")
         plt.ylabel("Q-Error")
     elif (plot_type == "bar"):
-        sns.barplot(data=df_sorted, x="q-error", y="query", hue="model", dodge=False, alpha=0.7, edgecolor='black', orient="h", hue_order=hue_order)
+        df_combined.sort_values(by="q-error", inplace=True, ascending=False)
+        sns.barplot(data=df_combined, x="q-error", y="query", hue="model", dodge=False, alpha=0.7, edgecolor='black', orient="h")
         plt.xscale("log")
         plt.xlabel("Q-Error")
         plt.ylabel("Query")
