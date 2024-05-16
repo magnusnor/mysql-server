@@ -57,6 +57,7 @@
 #include "mysqld_error.h"
 #include "prealloced_array.h"
 #include "scope_guard.h"
+#include "sql/conn_handler/ml_socket_connection.h"
 #include "sql/field.h"
 #include "sql/filesort.h"
 #include "sql/handler.h"
@@ -4270,6 +4271,13 @@ void CostingReceiver::ProposeHashJoin(
         FindOutputRowsForJoin(outer_input_rows, inner_input_rows, edge);
   }
 
+  if (m_thd->ml.m_ml_cardinality_estimation_active) {
+    MLModel ml_model;
+    double num_output_rows_ml = ml_model.GetCardinalityEstimate(
+        m_graph, edge, left_path, right_path, right);
+    num_output_rows = num_output_rows_ml;
+  }
+
   // left_path and join_path.hash_join().outer are intentionally different if
   // rewrite_semi_to_inner is true. See comment where DeduplicateForSemijoin()
   // is called above. We want to calculate join cost based on the actual left
@@ -4842,8 +4850,15 @@ void CostingReceiver::ProposeNestedLoopJoin(
       }
     }
 
-    join_path.num_output_rows_before_filter =
-        FindOutputRowsForJoin(outer_input_rows, inner_input_rows, edge);
+    if (m_thd->ml.m_ml_cardinality_estimation_active) {
+      MLModel ml_model;
+      double num_output_rows_ml = ml_model.GetCardinalityEstimate(m_graph, edge, left_path, right_path, right);
+      join_path.num_output_rows_before_filter = num_output_rows_ml;
+    }
+    else {
+      join_path.num_output_rows_before_filter =
+          FindOutputRowsForJoin(outer_input_rows, inner_input_rows, edge);
+    }
     join_path.set_num_output_rows(join_path.num_output_rows_before_filter);
   }
 
@@ -5464,7 +5479,7 @@ AccessPath *CostingReceiver::ProposeAccessPath(
   // see bug #33550360.
   const bool has_known_row_count_inconsistency_bugs =
       m_graph->has_reordered_left_joins || has_clamped_multipart_eq_ref ||
-      has_semijoin_with_possibly_clamped_child;
+      has_semijoin_with_possibly_clamped_child || m_thd->ml.m_ml_cardinality_estimation_active;
   bool verify_consistency = (m_trace != nullptr);
 #ifndef NDEBUG
   if (!has_known_row_count_inconsistency_bugs) {
