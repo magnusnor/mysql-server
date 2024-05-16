@@ -351,4 +351,14 @@ class PT_hint_resource_group : public PT_hint {
   }
 };
 
+class PT_hint_ml_cardinality_estimation : public PT_hint {
+  typedef PT_hint super;
+
+ public:
+  PT_hint_ml_cardinality_estimation()
+      : PT_hint(ML_CARDINALITY_ESTIMATION_HINT_ENUM, false) {}
+
+  bool do_contextualize(Parse_context *pc) override;
+};
+
 #endif /* PARSE_TREE_HINTS_INCLUDED */

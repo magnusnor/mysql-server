@@ -1046,6 +1046,16 @@ class THD : public MDL_context_owner,
   String m_rewritten_query;
 
  public:
+  class ML {
+   public:
+    // Whether the ML cardinality hint is active
+    bool m_ml_cardinality_estimation_active = false;
+    void set_ml_cardinality_hint() {
+      m_ml_cardinality_estimation_active = true;
+    }
+  } ml;
+
+ public:
   /* Used to execute base64 coded binlog events in MySQL server */
   Relay_log_info *rli_fake;
   /* Slave applier execution context */
