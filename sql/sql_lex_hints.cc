@@ -227,6 +227,7 @@ void Hint_scanner::add_hint_token_digest() {
           case DERIVED_CONDITION_PUSHDOWN_HINT:
           case NO_DERIVED_CONDITION_PUSHDOWN_HINT:
           case ML_CARDINALITY_ESTIMATION_HINT:
+          case ML_CARDINALITY_ESTIMATION_NO_PLANNING_HINT:
             break;
           default:
             assert(false);

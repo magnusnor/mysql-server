@@ -997,6 +997,8 @@ static bool AddPathCosts(const AccessPath *path,
     error |= AddMemberToObject<Json_double>(obj, "estimated_total_cost", cost);
     error |= AddMemberToObject<Json_double>(obj, "estimated_rows",
                                             path->num_output_rows());
+    error |= AddMemberToObject<Json_double>(obj, "estimated_rows_ml", path->num_output_rows_ml());
+    error |= AddMemberToObject<Json_double>(obj, "estimated_rows_original", path->num_output_rows_original());
   } /* if (path->num_output_rows() >= 0.0) */
 
   /* Add analyze figures */

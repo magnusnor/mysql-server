@@ -882,9 +882,23 @@ struct AccessPath {
 
   void set_num_output_rows(double val) { m_num_output_rows = val; }
 
+  double num_output_rows_ml() const { return m_num_output_rows_ml; }
+
+  void set_num_output_rows_ml(double val) { m_num_output_rows_ml = val; }
+
+  double num_output_rows_original() const { return m_num_output_rows_original; }
+
+  void set_num_output_rows_original(double val) { m_num_output_rows_original = val; }
+
  private:
   /// Expected number of output rows.
   double m_num_output_rows{kUnknownRowCount};
+
+  /// Estimated number of output rows by ML model.
+  double m_num_output_rows_ml{kUnknownRowCount};
+
+  /// Estimated number of output rows by original cost model.
+  double m_num_output_rows_original{kUnknownRowCount};
 
   /// Expected cost to read all of this access path once.
   double m_cost{kUnknownCost};
@@ -1287,10 +1301,10 @@ static_assert(std::is_trivially_destructible<AccessPath>::value,
               "on the MEM_ROOT and not wrapped in unique_ptr_destroy_only"
               "(because multiple candidates during planning could point to "
               "the same access paths, and refcounting would be expensive)");
-static_assert(sizeof(AccessPath) <= 144,
+static_assert(sizeof(AccessPath) <= 160,
               "We are creating a lot of access paths in the join "
               "optimizer, so be sure not to bloat it without noticing. "
-              "(96 bytes for the base, 48 bytes for the variant.)");
+              "(112 bytes for the base, 48 bytes for the variant.)");
 
 inline void CopyBasicProperties(const AccessPath &from, AccessPath *to) {
   to->set_num_output_rows(from.num_output_rows());

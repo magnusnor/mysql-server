@@ -1048,10 +1048,13 @@ class THD : public MDL_context_owner,
  public:
   class ML {
    public:
-    // Whether the ML cardinality hint is active
-    bool m_ml_cardinality_estimation_active = false;
-    void set_ml_cardinality_hint() {
-      m_ml_cardinality_estimation_active = true;
+    // Whether the ML cardinality estimation hint is active
+    bool m_ml_cardinality_estimation_hint_active = false;
+    // Whether to use the ML cardinality estimation for planning
+    int m_use_estimate = 0;
+    void set_ml_cardinality_estimation_hint(int use_estimate_arg) {
+      m_use_estimate = use_estimate_arg;
+      m_ml_cardinality_estimation_hint_active = true;
     }
   } ml;
 

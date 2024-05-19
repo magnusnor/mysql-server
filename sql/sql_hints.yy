@@ -136,6 +136,7 @@ static bool parse_int(longlong *to, const char *from, size_t from_length)
 %token NO_DERIVED_CONDITION_PUSHDOWN_HINT 1048
 %token HINT_ARG_FLOATING_POINT_NUMBER 1049
 %token ML_CARDINALITY_ESTIMATION_HINT 1050
+%token ML_CARDINALITY_ESTIMATION_NO_PLANNING_HINT 1051
 
 /*
   YYUNDEF is internal to Bison. Please don't change its number, or change
@@ -638,11 +639,19 @@ set_var_hint:
         ;
 
 ml_cardinality_estimation_hint:
-          ML_CARDINALITY_ESTIMATION_HINT
+          ML_CARDINALITY_ESTIMATION_HINT '(' HINT_ARG_NUMBER ')'
           {
-            $$ = NEW_PTN PT_hint_ml_cardinality_estimation();
+            longlong use_estimate;
+            if (parse_int(&use_estimate, $3.str, $3.length) || use_estimate > 1 || use_estimate < 0)
+            {
+             $$= nullptr;
+            }
+            else
+            {
+            $$= NEW_PTN PT_hint_ml_cardinality_estimation(use_estimate);
             if ($$ == NULL)
                YYABORT; // OOM
+            }
           }
         ;
 

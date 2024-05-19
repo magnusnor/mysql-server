@@ -355,8 +355,11 @@ class PT_hint_ml_cardinality_estimation : public PT_hint {
   typedef PT_hint super;
 
  public:
-  PT_hint_ml_cardinality_estimation()
-      : PT_hint(ML_CARDINALITY_ESTIMATION_HINT_ENUM, false) {}
+  int use_estimate;
+
+  PT_hint_ml_cardinality_estimation(int use_estimate_arg)
+      : PT_hint(ML_CARDINALITY_ESTIMATION_HINT_ENUM, false),
+        use_estimate(use_estimate_arg) {}
 
   bool do_contextualize(Parse_context *pc) override;
 };

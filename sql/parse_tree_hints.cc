@@ -586,6 +586,6 @@ bool PT_hint_resource_group::do_contextualize(Parse_context *pc) {
 
 bool PT_hint_ml_cardinality_estimation::do_contextualize(Parse_context *pc) {
   if (super::do_contextualize(pc)) return true;
-  pc->thd->ml.set_ml_cardinality_hint();
+  pc->thd->ml.set_ml_cardinality_estimation_hint(use_estimate);
   return false;
 }
