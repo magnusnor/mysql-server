@@ -2990,8 +2990,7 @@ static PasswdValue check_user(const char *user) {
   if (tmp_user_info.IsVoid()) {
     // Allow a numeric uid to be used
     const char *pos;
-    for (pos = user; my_isdigit(mysqld_charset, *pos); pos++)
-      ;
+    for (pos = user; my_isdigit(mysqld_charset, *pos); pos++);
     if (*pos)  // Not numeric id
       goto err;
 
@@ -7702,8 +7701,8 @@ static int setup_error_log_components() {
 
         goto failure;
       } /* purecov: end */
-    }   // value was OK, but could not be set
-        // If we arrive here, the value was OK, and was set successfully.
+    }  // value was OK, but could not be set
+       // If we arrive here, the value was OK, and was set successfully.
   } else {
     /*
       We were given an illegal value at start-up, so the default was
@@ -9073,9 +9072,10 @@ class Plugin_and_data_dir_option_parser final {
   bool valid_;
 };
 
-bool start_ml_server(const std::string &interpreter_path, const std::string &script_path) {
+bool start_ml_server(const std::string &interpreter_path,
+                     const std::string &script_path) {
   std::string command = interpreter_path + " " + script_path;
-  FILE* pipe = popen(command.c_str(), "r");
+  FILE *pipe = popen(command.c_str(), "r");
   if (!pipe) {
     printf("[MySQL] Error starting ML module\n");
     return true;
@@ -9110,9 +9110,9 @@ int mysqld_main(int argc, char **argv)
   calculate_mysql_home_from_my_progname();
 
 #ifdef WITH_HYPERGRAPH_OPTIMIZER
-  std::thread ml_thread(start_ml_server, "/home/magnus/dev/priv/venv/mysql-server-env/bin/python3",  "/home/magnus/dev/priv/mysql-server/ml/server.py &");
+  std::thread ml_thread(start_ml_server, "/home/magnus/Dev/venv/bin/python3",
+                        "/home/magnus/Dev/mysql-server/ml/server.py &");
   ml_thread.detach();
-  // start_ml_server("/home/magnus/dev/priv/venv/mysql-server-env/bin/python", "/home/magnus/dev/priv/mysql-server/ml/server.py &");
 #endif
 
 #ifndef _WIN32
