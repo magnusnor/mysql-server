@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from mscn.util import *
 from mscn.data import get_train_datasets
 from mscn.model import SetConv
-from predict import predict_dataset
+from predict import run_inference_on_dataset
 
 import pandas as pd
 
@@ -52,7 +52,7 @@ def validate(model, val_data_loader, cuda, min_val, max_val):
     return val_qerror
 
 
-def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_units, cuda):
+def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_units, cuda, save_best_model):
     # Load training and validation data
     dicts, column_min_max_vals, min_val, max_val, labels_train, labels_test, max_num_joins, max_num_predicates, train_data, test_data = get_train_datasets(
         num_queries, num_materialized_samples)
@@ -89,6 +89,12 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
         model_checkpoint_path = os.path.join('checkpoints', 'model_sampling.pth')
     else:
         model_checkpoint_path = os.path.join('checkpoints', 'model.pth')
+    
+    if (save_best_model and num_materialized_samples > 0):
+        model_checkpoint_path_best = os.path.join('checkpoints', 'model_sampling_best.pth')
+    else:
+        model_checkpoint_path_best = os.path.join('checkpoints', 'model_best.pth')
+
     epoch_start = 0
 
     if (os.path.exists(model_checkpoint_path)):
@@ -130,7 +136,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
 
         print(f"Epoch {epoch}, Training loss: {train_qerror}, Validation loss: {val_qerror}")
 
-        if (val_qerror < best_val_qerror):
+        if (save_best_model and val_qerror < best_val_qerror):
             best_val_qerror = val_qerror
 
             if not os.path.exists(os.path.dirname(model_checkpoint_path)):
@@ -152,7 +158,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
                 'sample_feats': sample_feats,
                 'predicate_feats': predicate_feats,
                 'join_feats': join_feats,
-            }, model_checkpoint_path)
+            }, model_checkpoint_path_best)
             else:
                 torch.save({
                     'epoch': epoch,
@@ -167,9 +173,40 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
                     'table_feats': table_feats,
                     'predicate_feats': predicate_feats,
                     'join_feats': join_feats,
-                }, model_checkpoint_path)
+                }, model_checkpoint_path_best)
 
-            print(f"New best model saved for epoch {epoch} at {os.path.abspath(model_checkpoint_path)}")
+            print(f"New best model saved for epoch {epoch} at {os.path.abspath(model_checkpoint_path_best)}")
+        # Save model checkpoint at the current epoch
+        if (num_materialized_samples > 0):
+            torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'dicts': dicts,
+            'column_min_max_vals': column_min_max_vals,
+            'max_num_joins': max_num_joins,
+            'max_num_predicates': max_num_predicates,
+            'min_val': min_val,
+            'max_val': max_val,
+            'sample_feats': sample_feats,
+            'predicate_feats': predicate_feats,
+            'join_feats': join_feats,
+        }, model_checkpoint_path)
+        else:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'dicts': dicts,
+                'column_min_max_vals': column_min_max_vals,
+                'max_num_joins': max_num_joins,
+                'max_num_predicates': max_num_predicates,
+                'min_val': min_val,
+                'max_val': max_val,
+                'table_feats': table_feats,
+                'predicate_feats': predicate_feats,
+                'join_feats': join_feats,
+            }, model_checkpoint_path)
     
     if not os.path.exists("./dataframes"):
         os.makedirs("./dataframes", exist_ok=True)
@@ -183,10 +220,10 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
     print(f"Model training saved as DataFrame at {os.path.abspath('./dataframes/model_training.pkl')}")
 
     # Get final training and validation set predictions
-    preds_train, t_total = predict_dataset(model, train_data_loader, cuda)
+    preds_train, t_total = run_inference_on_dataset(model, train_data_loader, cuda)
     print("Prediction time per training sample: {}".format(t_total / len(labels_train) * 1000))
 
-    preds_test, t_total = predict_dataset(model, test_data_loader, cuda)
+    preds_test, t_total = run_inference_on_dataset(model, test_data_loader, cuda)
     print("Prediction time per validation sample: {}".format(t_total / len(labels_test) * 1000))
 
     # Unnormalize
@@ -213,8 +250,9 @@ def main():
     parser.add_argument("--batch", help="batch size (default: 1024)", type=int, default=1024)
     parser.add_argument("--hid", help="number of hidden units (default: 256)", type=int, default=256)
     parser.add_argument("--cuda", help="use CUDA", action="store_true")
+    parser.add_argument("--save-best-model", help="save the best model during training", action="store_true")
     args = parser.parse_args()
-    train(args.queries, args.epochs, args.materialized_samples, args.batch, args.hid, args.cuda)
+    train(args.queries, args.epochs, args.materialized_samples, args.batch, args.hid, args.cuda, args.save_best_model)
 
 
 if __name__ == "__main__":

@@ -187,6 +187,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--workload", help="synthetic, synthetic-sampling, scale, scale-sampling, job-light, job-light-sampling (default: job-light)", type=str, default="job-light")
     parser.add_argument("--plot-type", help="bar, box (default: bar)", type=str, default="box")
+    parser.add_argument("--model-training", help="plot model training", action="store_true")
     parser.add_argument("--all-workloads", help="plot metrics for all workloads", action="store_true")
     parser.add_argument("--sub-plans", help="use sub-plans", action="store_true")
     parser.add_argument("--compare-sampling", help="compare workload with and without materialized base samples", action="store_true")
@@ -194,6 +195,8 @@ def main():
     args = parser.parse_args()
     if (args.all_workloads):
         plot_q_error_all_workloads(args.save_plot)
+    elif (args.model_training):
+        plot_model_training(args.save_plot)
     else:
         plot_q_error_for_workload(args.workload, args.plot_type, args.compare_sampling, args.sub_plans, args.save_plot)
     
