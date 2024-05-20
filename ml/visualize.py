@@ -25,7 +25,7 @@ def save_plot(filename:str):
     images_folder_path = "./images/"
     if not os.path.exists(images_folder_path):
         os.makedirs(images_folder_path, exist_ok=True)
-    plt.savefig(os.path.join(images_folder_path, filename), format="pdf")
+    plt.savefig(os.path.join(images_folder_path, filename), format="pdf", bbox_inches="tight")
 
 
 def calculate_q_error(estimated, real):
