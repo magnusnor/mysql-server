@@ -5,6 +5,7 @@ import os
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from mscn.util import *
 from mscn.data import get_train_datasets
@@ -72,6 +73,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
         model = SetConv(table_feats, predicate_feats, join_feats, hid_units)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5, verbose=True)
 
     print(f"CUDA is available: {torch.cuda.is_available()}")
     if cuda:
@@ -124,6 +126,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
             loss = qerror_loss(outputs, targets.float(), min_val, max_val)
             loss_total += loss.item()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # Apply gradient clipping
             optimizer.step()
 
         # Training Q-Error
@@ -133,6 +136,8 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
         # Validation Q-Error
         val_qerror = validate(model, test_data_loader, cuda, min_val, max_val)
         val_qerrors.append(val_qerror)
+
+        scheduler.step(val_qerror)
 
         print(f"Epoch {epoch}, Training loss: {train_qerror}, Validation loss: {val_qerror}")
 
@@ -147,6 +152,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
             if (num_materialized_samples > 0):
                 torch.save({
                 'epoch': epoch,
+                'cuda': cuda,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'dicts': dicts,
@@ -162,6 +168,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
             else:
                 torch.save({
                     'epoch': epoch,
+                    'cuda': cuda,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'dicts': dicts,
@@ -180,6 +187,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
         if (num_materialized_samples > 0):
             torch.save({
             'epoch': epoch,
+            'cuda': cuda,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'dicts': dicts,
@@ -195,6 +203,7 @@ def train(num_queries, num_epochs, num_materialized_samples, batch_size, hid_uni
         else:
             torch.save({
                 'epoch': epoch,
+                'cuda': cuda,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'dicts': dicts,

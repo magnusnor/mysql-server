@@ -1,4 +1,5 @@
 import numpy as np
+import json
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -144,7 +145,9 @@ def encode_tables(tables, table2vec):
                 table_vec.append(np.zeros(len(table2vec)))
                 logger.error(f"No mapping found for table: {table}")
                 logger.error(e)
-        tables_enc[i].append(table_vec)
+            # table_vec.append(np.zeros(1000, dtype="uint8").tolist())
+            # table_vec = np.hstack(table_vec)
+            tables_enc[i].append(table_vec)
     return tables_enc
 
 
@@ -199,6 +202,7 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
             joins_enc[i].append(join_vec)
     return predicates_enc, joins_enc
 
+
 def print_qerror(preds_unnorm, labels_unnorm):
     qerror = []
     for i in range(len(preds_unnorm)):
@@ -207,12 +211,58 @@ def print_qerror(preds_unnorm, labels_unnorm):
         else:
             qerror.append(float(labels_unnorm[i]) / float(preds_unnorm[i]))
 
-    print("Median: {}".format(np.median(qerror)))
-    print("90th percentile: {}".format(np.percentile(qerror, 90)))
-    print("95th percentile: {}".format(np.percentile(qerror, 95)))
-    print("99th percentile: {}".format(np.percentile(qerror, 99)))
-    print("Max: {}".format(np.max(qerror)))
-    print("Mean: {}".format(np.mean(qerror)))
+    qerror_median = np.median(qerror)
+    qerror_90_percentile = np.percentile(qerror, 90)
+    qerror_95_percentile = np.percentile(qerror, 95)
+    qerror_99_percentile = np.percentile(qerror, 99)
+    qerror_max = np.max(qerror)
+    qerror_mean = np.mean(qerror)
+
+    print("Median: {}".format(qerror_median))
+    print("90th percentile: {}".format(qerror_90_percentile))
+    print("95th percentile: {}".format(qerror_95_percentile))
+    print("99th percentile: {}".format(qerror_99_percentile))
+    print("Max: {}".format(qerror_max))
+    print("Mean: {}".format(qerror_mean))
+
+def save_qerror_statistics(preds_unnorm, labels_unnorm, checkpoint, num_materialized_samples):
+    qerror = []
+    for i in range(len(preds_unnorm)):
+        if preds_unnorm[i] > float(labels_unnorm[i]):
+            qerror.append(preds_unnorm[i] / float(labels_unnorm[i]))
+        else:
+            qerror.append(float(labels_unnorm[i]) / float(preds_unnorm[i]))
+
+    qerror_median = np.round(np.median(qerror), 3)
+    qerror_90_percentile = np.round(np.percentile(qerror, 90), 3)
+    qerror_95_percentile = np.round(np.percentile(qerror, 95), 3)
+    qerror_99_percentile = np.round(np.percentile(qerror, 99), 3)
+    qerror_max = np.round(np.max(qerror), 3)
+    qerror_mean = np.round(np.mean(qerror), 3)
+
+    print("Median: {}".format(qerror_median))
+    print("90th percentile: {}".format(qerror_90_percentile))
+    print("95th percentile: {}".format(qerror_95_percentile))
+    print("99th percentile: {}".format(qerror_99_percentile))
+    print("Max: {}".format(qerror_max))
+    print("Mean: {}".format(qerror_mean))
+
+    data = {
+        "epoch": checkpoint["epoch"]+1,
+        "materialized_samples": num_materialized_samples,
+        "qerror_median": qerror_median,
+        "qerror_90_percentile": qerror_90_percentile,
+        "qerror_95_percentile": qerror_95_percentile,
+        "qerror_99_percentile": qerror_99_percentile,
+        "qerror_max": qerror_max,
+        "qerror_mean": qerror_mean
+    }
+
+    using_sampling = "sampling" if num_materialized_samples > 0 else "no-sampling"
+
+    with open(f"results/stats/{checkpoint['epoch']+1}-epochs-{using_sampling}.json", "w") as file:
+        json.dump(data, file)
+
 
 def print_workload_name(name):
     top_bottom = "+" + "-" * (len(name) + 2) + "+"

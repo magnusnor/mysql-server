@@ -115,7 +115,7 @@ def predict_workload(workload_name, num_materialized_samples, num_queries, batch
         else:
             joins, predicates, tables, label = load_data(file_name)
             tables_test = encode_tables(tables, table2vec)
-        
+
         predicates_test, joins_test = encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join2vec)
         labels_test, _, _ = normalize_labels(label, min_val, max_val)
 
@@ -139,7 +139,7 @@ def predict_workload(workload_name, num_materialized_samples, num_queries, batch
 
         # Print metrics
         print("\nQ-Error " + workload_name + ":")
-        print_qerror(preds_test_unnorm, label)
+        save_qerror_statistics(preds_test_unnorm, label, checkpoint, num_materialized_samples)
 
         # Write predictions
         if (num_materialized_samples > 0):
@@ -151,7 +151,7 @@ def predict_workload(workload_name, num_materialized_samples, num_queries, batch
             for i in range(len(preds_test_unnorm)):
                 f.write(str(preds_test_unnorm[i]) + "," + label[i] + "\n")
 
-def predict_query(query, batch_size=256, cuda=False):
+def predict_query(query, batch_size=1024, cuda=False):
     """
     Run inference on a single query.
     Returns the cardinality estimate for the query.
