@@ -145,9 +145,7 @@ def encode_tables(tables, table2vec):
                 table_vec.append(np.zeros(len(table2vec)))
                 logger.error(f"No mapping found for table: {table}")
                 logger.error(e)
-            # table_vec.append(np.zeros(1000, dtype="uint8").tolist())
-            # table_vec = np.hstack(table_vec)
-            tables_enc[i].append(table_vec)
+        tables_enc[i].append(table_vec)
     return tables_enc
 
 
