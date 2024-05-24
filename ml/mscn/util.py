@@ -143,8 +143,8 @@ def encode_tables(tables, table2vec):
                 # If the table does not exist in the training data (unseen query feature),
                 # initialize a zero vector.
                 table_vec.append(np.zeros(len(table2vec)))
-                logger.error(f"No mapping found for table: {table}")
-                logger.error(e)
+                # logger.error(f"No mapping found for table: {table}")
+                # logger.error(e)
         tables_enc[i].append(table_vec)
     return tables_enc
 
@@ -170,16 +170,16 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
                     # If the column does not exist in the training data (unseen query feature),
                     # initialize a zero vector.
                     pred_vec.append(np.zeros(len(column2vec)))
-                    logger.error(f"No mapping found for column: {column}")
-                    logger.error(e)
+                    # logger.error(f"No mapping found for column: {column}")
+                    # logger.error(e)
                 try:
                     pred_vec.append(op2vec[operator])
                 except KeyError as e:
                     # If the operator does not exist in the training data (unseen query feature),
                     # initialize a zero vector.
                     pred_vec.append(np.zeros(len(op2vec)))
-                    logger.error(f"No mapping found for operator: {operator}")
-                    logger.error(e)
+                    # logger.error(f"No mapping found for operator: {operator}")
+                    # logger.error(e)
                 pred_vec.append(norm_val)
                 pred_vec = np.hstack(pred_vec)
             else:
@@ -195,8 +195,8 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
                 # If the join condition does not exist in the training data (unseen query feature),
                 # initialize a zero vector.
                 join_vec = np.zeros((len(join2vec)))
-                logger.error(f"No mapping found for join: {predicate}")
-                logger.error(e)
+                # logger.error(f"No mapping found for join: {predicate}")
+                # logger.error(e)
             joins_enc[i].append(join_vec)
     return predicates_enc, joins_enc
 

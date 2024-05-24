@@ -17,9 +17,9 @@ server.bind(SOCKET_PATH)
 server.listen(1)
 
 while True:
-    logger.info('Server is listening for incoming connections...')
+    # logger.info('Server is listening for incoming connections...')
     connection, _ = server.accept()
-    logger.info(f'Connection from: {str(connection.getsockname())}')
+    # logger.info(f'Connection from: {str(connection.getsockname())}')
     with connection:
         data_buffer = ""
         while True:
@@ -32,7 +32,7 @@ while True:
                 messages = data_buffer.split('\n')
                 for msg in messages[:-1]:
                     query_rep = json.loads(msg)
-                    logger.info(f"Received query representation from MySQL: {query_rep}")
+                    # logger.info(f"Received query representation from MySQL: {query_rep}")
                     cardinality = predict_query(query_rep)
                     connection.sendall(str(cardinality).encode())
                 data_buffer = messages[-1]
