@@ -160,6 +160,9 @@ def make_tensors(tables, predicates, joins, max_num_joins, max_num_predicates):
     for table in tables:
         table_tensor = np.vstack(table)
         num_pad = max_num_joins + 1 - table_tensor.shape[0]
+        if num_pad < 0:
+            table_tensor = table_tensor[:max_num_joins + 1, :]
+            num_pad = 0
         table_mask = np.ones_like(table_tensor).mean(1, keepdims=True)
         table_tensor = np.pad(table_tensor, ((0, num_pad), (0, 0)), 'constant')
         table_mask = np.pad(table_mask, ((0, num_pad), (0, 0)), 'constant')
@@ -175,6 +178,9 @@ def make_tensors(tables, predicates, joins, max_num_joins, max_num_predicates):
     for predicate in predicates:
         predicate_tensor = np.vstack(predicate)
         num_pad = max_num_predicates - predicate_tensor.shape[0]
+        if num_pad < 0:
+            predicate_tensor = predicate_tensor[:max_num_predicates, :]
+            num_pad = 0
         predicate_mask = np.ones_like(predicate_tensor).mean(1, keepdims=True)
         predicate_tensor = np.pad(predicate_tensor, ((0, num_pad), (0, 0)), 'constant')
         predicate_mask = np.pad(predicate_mask, ((0, num_pad), (0, 0)), 'constant')
@@ -190,6 +196,9 @@ def make_tensors(tables, predicates, joins, max_num_joins, max_num_predicates):
     for join in joins:
         join_tensor = np.vstack(join)
         num_pad = max_num_joins - join_tensor.shape[0]
+        if num_pad < 0:
+            join_tensor = join_tensor[:max_num_joins, :]
+            num_pad = 0
         join_mask = np.ones_like(join_tensor).mean(1, keepdims=True)
         join_tensor = np.pad(join_tensor, ((0, num_pad), (0, 0)), 'constant')
         join_mask = np.pad(join_mask, ((0, num_pad), (0, 0)), 'constant')

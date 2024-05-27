@@ -87,9 +87,11 @@ bool MLSocket::ReadML() {
     printf("[MySQL] Reading from ML model failed\n");
     return true;
   } else if (bytes == 0) {
-    printf("[MySQL] No data received from ML model\n");
+    // printf("[MySQL] No data received from ML model\n");
+    return false;
   } else {
-    printf("[MySQL] Data received from ML model: %s\n", m_data);
+    // printf("[MySQL] Data received from ML model: %s\n", m_data);
+    return false;
   }
   return false;
 }
