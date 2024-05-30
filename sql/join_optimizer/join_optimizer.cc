@@ -4274,7 +4274,7 @@ void CostingReceiver::ProposeHashJoin(
   if (m_thd->ml.m_ml_cardinality_estimation_hint_active) {
     MLModel ml_model;
     double num_output_rows_ml = ml_model.GetCardinalityEstimate(
-        m_graph, edge, left_path, right_path, right);
+        m_graph, edge, left_path, right_path);
     // Only use the ML estimate if explicitly set in the hint.
     if (m_thd->ml.m_use_estimate) {
       join_path.set_num_output_rows_original(num_output_rows);
@@ -4863,7 +4863,7 @@ void CostingReceiver::ProposeNestedLoopJoin(
 
     if (m_thd->ml.m_ml_cardinality_estimation_hint_active) {
       MLModel ml_model;
-      double num_output_rows_ml = ml_model.GetCardinalityEstimate(m_graph, edge, left_path, right_path, right);
+      double num_output_rows_ml = ml_model.GetCardinalityEstimate(m_graph, edge, left_path, right_path);
       // Only use the ML estimate if explicitly set in the hint.
       if (m_thd->ml.m_use_estimate) {
         join_path.num_output_rows_before_filter = num_output_rows_ml;

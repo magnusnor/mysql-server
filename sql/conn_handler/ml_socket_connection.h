@@ -44,7 +44,7 @@ class MLQueryRep {
   MLQueryRep();
   ~MLQueryRep();
 
-  std::string CreateQueryRep(JoinHypergraph *graph, const JoinPredicate *edge, AccessPath *left_path, AccessPath *right_path, hypergraph::NodeMap right);
+  std::string CreateQueryRep(JoinHypergraph *graph, const JoinPredicate *edge, AccessPath *left_path, AccessPath *right_path);
 
  private:
   std::string m_tables;
@@ -54,7 +54,7 @@ class MLQueryRep {
   std::vector<std::string> m_operators;
 
   void AddTables(JoinHypergraph *graph, const JoinPredicate *edge);
-  void AddJoins(JoinHypergraph *graph, const JoinPredicate *edge, hypergraph::NodeMap right);
+  void AddJoins(const JoinPredicate *edge);
   void AddPredicates(JoinHypergraph *graph, const JoinPredicate *edge, AccessPath *left_path, AccessPath *right_path);
   std::string PrepareCondition(const std::string &condition);
   std::string GetCondition(Item *condition);
@@ -70,7 +70,7 @@ class MLModel {
   MLModel();
   ~MLModel();
 
-  double GetCardinalityEstimate(JoinHypergraph *graph, const JoinPredicate *edge, AccessPath *left_path, AccessPath *right_path, hypergraph::NodeMap right);
+  double GetCardinalityEstimate(JoinHypergraph *graph, const JoinPredicate *edge, AccessPath *left_path, AccessPath *right_path);
 
  private:
   MLQueryRep m_ml_query_rep;

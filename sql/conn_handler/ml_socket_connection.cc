@@ -123,41 +123,11 @@ void MLQueryRep::AddTables(JoinHypergraph *graph, const JoinPredicate *edge) {
   m_tables += "]";
 }
 
-void MLQueryRep::AddJoins(JoinHypergraph *graph, const JoinPredicate *edge,
-                          hypergraph::NodeMap right) {
+void MLQueryRep::AddJoins(const JoinPredicate *edge) {
   std::string join_condition =
       PrepareCondition(GenerateExpressionLabel(edge->expr).c_str());
-  std::string join_condition_left;
-  std::string join_condition_right;
-  std::string ordered_join_condition = "";
-
-  size_t delimiter_pos = join_condition.find("=");
-  if (delimiter_pos != std::string::npos) {
-    join_condition_left = join_condition.substr(0, delimiter_pos);
-    join_condition_right = join_condition.substr(delimiter_pos + 1);
-  }
-
-  for (size_t node_idx : BitsSetIn(right)) {
-    std::string node_table = graph->nodes[node_idx].table->alias;
-    // If we find the right side table node in the left join condition
-    // expression, the join condition is already ordered.
-    if (join_condition_left.find(node_table) != std::string::npos) {
-      ordered_join_condition = join_condition;
-      break;
-    }
-    // Else, if we find the right side table node in the right join condition
-    // expression, move it to the left join condition expression.
-    else if (join_condition_right.find(node_table) != std::string::npos &&
-             ordered_join_condition.empty()) {
-      ordered_join_condition += join_condition_right;
-      ordered_join_condition += "=";
-      ordered_join_condition += join_condition_left;
-    } else {
-      continue;
-    }
-  }
   m_joins += "[\"";
-  m_joins += ordered_join_condition;
+  m_joins += join_condition;
   m_joins += "\"]";
 }
 
@@ -227,10 +197,9 @@ void MLQueryRep::ParsePredicates(JoinHypergraph *graph,
 std::string MLQueryRep::CreateQueryRep(JoinHypergraph *graph,
                                        const JoinPredicate *edge,
                                        AccessPath *left_path,
-                                       AccessPath *right_path,
-                                       hypergraph::NodeMap right) {
+                                       AccessPath *right_path) {
   AddTables(graph, edge);
-  AddJoins(graph, edge, right);
+  AddJoins(edge);
   AddPredicates(graph, edge, left_path, right_path);
 
   std::string query_rep = "{";
@@ -258,10 +227,9 @@ MLModel::~MLModel() {}
 double MLModel::GetCardinalityEstimate(JoinHypergraph *graph,
                                        const JoinPredicate *edge,
                                        AccessPath *left_path,
-                                       AccessPath *right_path,
-                                       hypergraph::NodeMap right) {
+                                       AccessPath *right_path) {
   std::string query_rep =
-      m_ml_query_rep.CreateQueryRep(graph, edge, left_path, right_path, right);
+      m_ml_query_rep.CreateQueryRep(graph, edge, left_path, right_path);
   ml_socket.WriteML(query_rep);
   ml_socket.ReadML();
   m_cardinality_estimate = atof(ml_socket.GetData());

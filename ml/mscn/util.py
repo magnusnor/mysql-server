@@ -116,6 +116,10 @@ def unnormalize_labels(labels_norm, min_val, max_val):
     return np.array(np.round(np.exp(labels)), dtype=np.int64)
 
 
+def swap_join_condition_ordering(join_condition):
+    conditions = join_condition.split("=")
+    return f"{conditions[1]}={conditions[0]}"
+
 def encode_samples(tables, samples, table2vec):
     samples_enc = []
     for i, query in enumerate(tables):
@@ -192,11 +196,15 @@ def encode_data(predicates, joins, column_min_max_vals, column2vec, op2vec, join
             try:
                 join_vec = join2vec[predicate]
             except KeyError as e:
-                # If the join condition does not exist in the training data (unseen query feature),
-                # initialize a zero vector.
-                join_vec = np.zeros((len(join2vec)))
-                # logger.error(f"No mapping found for join: {predicate}")
-                # logger.error(e)
+                # If the join condition is not initially found in the mapping,
+                # try swapping the ordering.
+                try:
+                    join_vec = join2vec[swap_join_condition_ordering(predicate)]
+                except KeyError as e:
+                    logger.error(f"No mapping found for join: {swap_join_condition_ordering(predicate)}")
+                    # If the join condition does not exist in the training data (unseen query feature),
+                    # initialize a zero vector.
+                    join_vec = np.zeros((len(join2vec)))
             joins_enc[i].append(join_vec)
     return predicates_enc, joins_enc
 
