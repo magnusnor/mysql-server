@@ -209,7 +209,7 @@ def plot_model_training(save=False):
     df_melted = df.melt(id_vars=["epochs"], value_vars=["training_loss", "validation_loss"], 
                     var_name="Loss Type", value_name="Loss")
     df_melted["Loss Type"] = df_melted["Loss Type"].map({"training_loss": "Training", "validation_loss": "Validation"})
-    sns.lineplot(data=df_melted, x="epochs", y="Loss", hue="Loss Type")
+    sns.lineplot(data=df_melted, x="epochs", y="Loss", hue="Loss Type", style="Loss Type")
     plt.xlabel("Epochs")
     plt.ylabel("Mean Q-Error")
     plt.tight_layout()
@@ -289,70 +289,34 @@ def plot_q_error_per_query_no_split(workload, save=False):
     df_mysql = get_mysql_df(workload)
 
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
-    melted_df = pd.melt(new_df, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = new_df.sort_values(by="query", key=lambda x: x.apply(custom_sort))
 
-    colors = {"MySQL": "#4c72b0", "MSCN": "#dd8452"}
+    plt.figure(figsize=(10, 10))
 
-    plt.figure(figsize=(15, 15))
-    sns.set_color_codes("pastel")
-
-    sns.barplot(
+    bar_mysql = sns.barplot(
         x="q-error_mysql",
         y="query",
         data=sorted_df,
-        legend=False,
+        legend=True,
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
     )
 
-    sns.set_color_codes("muted")
-
-    sns.barplot(
+    bar_mscn = sns.barplot(
         x="q-error_mscn",
         y="query",
         data=sorted_df,
-        legend=False,
+        legend=True,
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
     )
 
-    legend_labels = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            label="MySQL",
-            markerfacecolor=colors["MySQL"],
-            markersize=10,
-        ),
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            label="MSCN",
-            markerfacecolor=colors["MSCN"],
-            markersize=10,
-        ),
-    ]
-
-    plt.legend(handles=legend_labels, title="Model", loc="upper right")
-    plt.xlabel("Q-Error")
-    plt.ylabel("Query")
-    plt.xscale("log")
+    bar_mscn.set_xlabel("Q-Error")
+    bar_mscn.set_ylabel("Query")
+    bar_mscn.set_xscale("log")
 
     sns.despine(left=True, bottom=True)
 
@@ -371,20 +335,10 @@ def plot_q_error_per_query_split(workload, save=False):
     df_mysql = get_mysql_df(workload)
 
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
-    melted_df = pd.melt(new_df, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = new_df.sort_values(by="q-error_mysql")
 
-    split_dfs, num_rows, num_cols = split_df(sorted_df, 2, 2
-    )
+    split_dfs, num_rows, num_cols = split_df(sorted_df, 2, 2)
 
     fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
@@ -397,7 +351,7 @@ def plot_q_error_per_query_split(workload, save=False):
             label="MySQL",
             edgecolor="black",
             linestyle="dotted",
-            ax=ax
+            ax=ax,
         )
 
         bar_mscn = sns.barplot(
@@ -444,92 +398,44 @@ def plot_q_error_per_query_no_split_compare_original(workload, save=False):
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
     df_original = df_original.rename(columns=lambda x: f"{x}_mscn_original" if x != "query" else x)
     new_df = pd.merge(new_df, df_original, on="query", suffixes=("", "_mscn_original"))
-    melted_df = pd.melt(new_df, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn", "q-error_mscn_original"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN",
-        "q-error_mscn_original": "MSCN-original"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = new_df.sort_values(by="query", key=lambda x: x.apply(custom_sort))
 
-    plt.figure(figsize=(15, 15))
-    sns.set_color_codes("pastel")
+    plt.figure(figsize=(10, 10))
 
-    sns.barplot(
+    bar_mysql = sns.barplot(
         x="q-error_mysql",
         y="query",
         data=sorted_df,
-        legend=False,
+        legend=True,
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
     )
 
-    sns.set_color_codes("muted")
-
-    sns.barplot(
+    bar_mscn = sns.barplot(
         x="q-error_mscn",
         y="query",
         data=sorted_df,
-        legend=False,
+        legend=True,
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
     )
 
-    sns.set_color_codes("deep")
-
-    sns.barplot(
+    bar_mscn_original = sns.barplot(
         x="q-error_mscn_original",
         y="query",
         data=sorted_df,
-        legend=False,
+        legend=True,
         label="MSCN-original",
         alpha=0.7,
         edgecolor="black",
     )
 
-    colors = {"MySQL": "#4c72b0", "MSCN": "#dd8452", "MSCN-original": "#55a868"}
-
-    legend_labels = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            label="MySQL",
-            markerfacecolor=colors["MySQL"],
-            markersize=10,
-        ),
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            label="MSCN",
-            markerfacecolor=colors["MSCN"],
-            markersize=10,
-        ),
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            label="MSCN-original",
-            markerfacecolor=colors["MSCN-original"],
-            markersize=10,
-        ),
-    ]
-
-    plt.legend(handles=legend_labels, title="Model", loc="upper right")
-    plt.xlabel("Q-Error")
-    plt.ylabel("Query")
-    plt.xscale("log")
+    bar_mscn_original.set_xlabel("Q-Error")
+    bar_mscn_original.set_ylabel("Query")
+    bar_mscn_original.set_xscale("log")
 
     sns.despine(left=True, bottom=True)
 
@@ -551,16 +457,6 @@ def plot_q_error_per_query_split_compare_original(workload, save=False):
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
     df_original = df_original.rename(columns=lambda x: f"{x}_mscn_original" if x != "query" else x)
     new_df = pd.merge(new_df, df_original, on="query", suffixes=("", "_mscn_original"))
-    melted_df = pd.melt(new_df, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn", "q-error_mscn_original"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN",
-        "q-error_mscn_original": "MSCN-original"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = new_df.sort_values(by="q-error_mysql")
 
@@ -589,7 +485,6 @@ def plot_q_error_per_query_split_compare_original(workload, save=False):
             alpha=0.7,
             edgecolor="black",
             ax=ax,
-            hatch="/"
         )
 
         bar_mscn_original = sns.barplot(
@@ -616,6 +511,7 @@ def plot_q_error_per_query_split_compare_original(workload, save=False):
             ncol=2,
             loc="lower center",
             frameon=True,
+            bbox_to_anchor=(0.5, -0.05)
         )
 
     plt.tight_layout()
@@ -633,15 +529,6 @@ def plot_q_error_top_n_best_queries(workload, n, save=False):
     df_mysql = get_mysql_df(workload)
 
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
-    melted_df = pd.melt(new_df, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = new_df.sort_values(by="q-error_mscn").head(n)
 
@@ -689,15 +576,6 @@ def plot_q_error_top_n_best_queries_relative(workload, n, save=False):
 
     df_merged = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
     df_merged["relative_difference"] = (df_merged["q-error_mscn"] - df_merged["q-error_mysql"]).abs() / df_merged["q-error_mscn"]
-    melted_df = pd.melt(df_merged, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = df_merged.sort_values(by="relative_difference", ascending=False).head(n)
 
@@ -744,15 +622,6 @@ def plot_q_error_top_n_worst_queries(workload, n, save=False):
     df_mysql = get_mysql_df(workload)
 
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
-    melted_df = pd.melt(new_df, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = new_df.sort_values(by="q-error_mscn", ascending=False).head(n)
 
@@ -800,15 +669,6 @@ def plot_q_error_top_n_worst_queries_relative(workload, n, save=False):
 
     df_merged = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
     df_merged["relative_difference"] = (df_merged["q-error_mscn"] - df_merged["q-error_mysql"]).abs() / df_merged["q-error_mysql"]
-    melted_df = pd.melt(df_merged, id_vars=["query"], 
-                value_vars=["q-error_mysql", "q-error_mscn"],
-                var_name="model", value_name="q-error")
-
-    source_replacements = {
-        "q-error_mysql": "MySQL",
-        "q-error_mscn": "MSCN"
-    }
-    melted_df['model'] = melted_df['model'].replace(source_replacements)
 
     sorted_df = df_merged.sort_values(by="relative_difference", ascending=False).head(n)
 
@@ -856,7 +716,7 @@ def plot_q_error_sub_plans_per_query(workload, save=False):
     unique_queries = df['Query'].unique()
     
     def plot_queries(queries, df):
-        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 10))
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
         axes = axes.flatten()
 
         hue_order = ['MySQL', 'MSCN']
@@ -901,7 +761,7 @@ def plot_q_error_sub_plans_top_n_best_queries(workload, n, save=False):
     unique_queries = top_n_entries['Query'].unique()
     
     def plot_queries(queries, df):
-        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 10))
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
         axes = axes.flatten()
 
         hue_order = ['MySQL', 'MSCN']
@@ -946,7 +806,7 @@ def plot_q_error_sub_plans_top_n_worst_queries(workload, n, save=False):
     unique_queries = top_n_entries['Query'].unique()
     
     def plot_queries(queries, df):
-        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 10))
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
         axes = axes.flatten()
 
         hue_order = ['MySQL', 'MSCN']
@@ -1084,9 +944,9 @@ def plot_q_error_sub_plans_level_trend(workload, save=False):
 
     df = get_mysql_plan_q_errors_df(workload).sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
 
-    hue_order = ['MySQL', 'MSCN']
+    hue_order = ["MySQL", "MSCN"]
 
-    sns.lineplot(data=df, x='Level', y='Q-Error', hue='Model', marker='o', hue_order=hue_order)
+    sns.lineplot(data=df, x="Level", y="Q-Error", hue="Model", style="Model", markers=['o', 's'], hue_order=hue_order)
     plt.yscale("log")
     plt.tight_layout()
     if save:
@@ -1096,10 +956,44 @@ def plot_q_error_sub_plans_level_trend(workload, save=False):
     else:
         plt.show()
 
+def plot_q_error_correlation(workload, save=False):
+
+    df_subplans = get_mysql_plan_q_errors_df(workload).sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
+    df_subplans_mscn = df_subplans[df_subplans["Model"] == "MSCN"]
+    df_subplans_mscn = df_subplans_mscn.groupby(['Query'], as_index=False)["Q-Error"].median()
+    df_mscn = get_mscn_predictions_dfs(workload)
+    df_mscn = df_mscn[df_mscn["source"] == "MSCN"]
+    df_mscn.rename(columns={"query": "Query", "q-error": "Q-Error"}, inplace=True)
+
+    df_merged = pd.merge(df_subplans_mscn, df_mscn, on='Query', suffixes=("_subplans", "_plan"))
+    df_melted = pd.melt(df_merged, id_vars=["Query"], 
+                value_vars=["Q-Error_subplans", "Q-Error_plan"],
+                var_name="Type", value_name="Q-Error")
+    
+    df_sorted = df_merged.sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
+
+    plt.figure(figsize=(10, 10))
+
+    corr = sns.lmplot(x='Q-Error_subplans', y='Q-Error_plan', data=df_sorted)
+    
+    corr.set_xlabels("Subplans")
+    corr.set_ylabels("Plan")
+
+    plt.xscale("log")
+    plt.yscale("log")
+    
+    plt.tight_layout()
+
+    if save:
+        filename = f"q-error-{workload}-correlation.pdf"
+        save_plot(filename)
+        plt.close()
+    else:
+        plt.show()
+
 def plot_exec_time_no_split(workload, save=False):
     dfs = get_benchmark_timing_dfs(workload)
     if dfs is not None:
-        colors = {"without_ml": "#4c72b0", "with_ml": "#dd8452"}
         df_without = dfs[dfs["command"] == "without_ml"]
         df_with = dfs[dfs["command"] == "with_ml"]
 
@@ -1111,53 +1005,29 @@ def plot_exec_time_no_split(workload, save=False):
 
         sorted_df = new_df.sort_values(by="median_without")
 
-        plt.figure(figsize=(15, 15))
+        plt.figure(figsize=(10, 10))
 
-        sns.barplot(
+        bar_without = sns.barplot(
             x="median_without",
             y="query",
             data=sorted_df,
-            legend=False,
+            legend=True,
             label="Without",
             edgecolor="black",
             linestyle="dotted",
         )
 
-        bar = sns.barplot(
+        bar_with = sns.barplot(
             x="median_with",
             y="query",
             data=sorted_df,
-            legend=False,
+            legend=True,
             label="With",
             alpha=0.7,
             edgecolor="black",
         )
-        bar.set_xlabel("Median seconds")
-        bar.set_ylabel("Query")
-
-        legend_labels = [
-            plt.Line2D(
-                [0],
-                [0],
-                marker="o",
-                color="w",
-                label="without_ml",
-                markerfacecolor=colors["without_ml"],
-                markersize=10,
-            ),
-            plt.Line2D(
-                [0],
-                [0],
-                marker="o",
-                color="w",
-                label="with_ml",
-                markerfacecolor=colors["with_ml"],
-                markersize=10,
-            ),
-        ]
-
-        plt.ylabel("Median seconds")
-        plt.legend(handles=legend_labels, title="Command", loc="upper right")
+        bar_with.set_xlabel("Median seconds")
+        bar_with.set_ylabel("Query")
 
         sns.despine(left=True, bottom=True)
         plt.tight_layout()
@@ -1196,7 +1066,7 @@ def plot_exec_time_split(workload, save=False):
                 label="Without",
                 edgecolor="black",
                 linestyle="dotted",
-                ax=ax
+                ax=ax,
             )
 
             bar_with = sns.barplot(
@@ -1467,6 +1337,7 @@ def main():
     plot_total_q_error_sub_plans_levels(job_light, save)
     plot_q_error_sub_plans_levels_per_query(job_light, save)
     plot_q_error_sub_plans_level_trend(job_light, save)
+    plot_q_error_correlation(job_light, save)
     plot_exec_time_no_split(job_light, save)
     plot_exec_time_split(job_light, save)
     plot_exec_time_top_n_fastest_queries(job_light, 10, save)
