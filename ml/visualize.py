@@ -81,7 +81,6 @@ def get_mscn_predictions_dfs(workload):
             df["q-error"] = calculate_q_error(df["estimated"], df["real"])
             df["query"] = (df.index + 1).astype(str)
             df["source"] = label
-            df.drop(columns=["estimated", "real"], inplace=True)
             dfs.append(df)
 
     return pd.concat(dfs, ignore_index=True)
@@ -91,6 +90,8 @@ def get_mysql_df(workload):
     if (not os.path.exists(results_folder_path)):
         return None
     
+    mscn_predictions = get_mscn_predictions_dfs(workload)
+    
     data = []
     for path in pathlib.Path(results_folder_path).glob("*.json"):
         with open(str(path)) as f:
@@ -98,14 +99,15 @@ def get_mysql_df(workload):
             file_content = f.read()
             json_start_index = file_content.find('EXPLAIN: {')
 
+            true_cardinality = mscn_predictions[mscn_predictions["query"] == name]["real"].unique()[0]
+
             if json_start_index != -1:
                 json_content = file_content[json_start_index + len('EXPLAIN: '):]
                 json_data = json.loads(json_content)
                 json_data["query"] = path.stem
                 if (json_data["inputs"][0]["access_type"] == "join"):
                     estimated_cardinality = json_data["inputs"][0]["estimated_rows"]
-                    actual_cardinality = json_data["inputs"][0]["actual_rows"]
-                    df = pd.DataFrame({"query": name, "estimated": [estimated_cardinality], "real": [actual_cardinality]})
+                    df = pd.DataFrame({"query": name, "estimated": [estimated_cardinality], "real": [true_cardinality]})
                     df["q-error"] = calculate_q_error(df['estimated'], df['real'])
                     df.drop(columns=["estimated", "real"], inplace=True)
                     data.append(df)
@@ -623,6 +625,10 @@ def plot_q_error_top_n_best_queries(workload, n, save=False):
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
 
     sorted_df = new_df.sort_values(by="q-error_mscn").head(n)
+    sorted_df_mysql = new_df.sort_values(by="q-error_mysql").head(n)
+
+    print(f"Sorted by MSCN: {sorted_df.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
+    print(f"Sorted by MySQL: {sorted_df_mysql.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
 
     bar_mysql = sns.barplot(
         x="q-error_mysql",
@@ -716,6 +722,10 @@ def plot_q_error_top_n_worst_queries(workload, n, save=False):
     new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
 
     sorted_df = new_df.sort_values(by="q-error_mscn", ascending=False).head(n)
+    sorted_df_mysql = new_df.sort_values(by="q-error_mysql", ascending=False).head(n)
+
+    print(f"Sorted by MSCN: {sorted_df.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
+    print(f"Sorted by MySQL: {sorted_df_mysql.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
 
     bar_mysql = sns.barplot(
         x="q-error_mysql",
