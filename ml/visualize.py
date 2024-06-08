@@ -283,7 +283,7 @@ def plot_total_q_error_compare_original(workload, save=False):
     else:
         plt.show()
 
-def plot_q_error_per_query_no_split(workload, save=False):
+def plot_q_error_per_query_no_split_sort_by_query(workload, save=False):
     dfs = get_mscn_predictions_dfs(workload)
     df = dfs[dfs["source"] == "MSCN"]
     df_mysql = get_mysql_df(workload)
@@ -323,7 +323,99 @@ def plot_q_error_per_query_no_split(workload, save=False):
     plt.tight_layout()
 
     if save:
-        filename = f"q-error-{workload}-per-query-no-split.pdf"
+        filename = f"q-error-{workload}-per-query-no-split-sort-by-query.pdf"
+        save_plot(filename)
+        plt.close()
+    else:
+        plt.show()
+
+def plot_q_error_per_query_no_split_sort_by_mysql(workload, save=False):
+    dfs = get_mscn_predictions_dfs(workload)
+    df = dfs[dfs["source"] == "MSCN"]
+    df_mysql = get_mysql_df(workload)
+
+    new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
+
+    sorted_df = new_df.sort_values(by="q-error_mysql")
+
+    plt.figure(figsize=(10, 10))
+
+    bar_mysql = sns.barplot(
+        x="q-error_mysql",
+        y="query",
+        data=sorted_df,
+        legend=True,
+        label="MySQL",
+        edgecolor="black",
+        linestyle="dotted",
+    )
+
+    bar_mscn = sns.barplot(
+        x="q-error_mscn",
+        y="query",
+        data=sorted_df,
+        legend=True,
+        label="MSCN",
+        alpha=0.7,
+        edgecolor="black",
+    )
+
+    bar_mscn.set_xlabel("Q-Error")
+    bar_mscn.set_ylabel("Query")
+    bar_mscn.set_xscale("log")
+
+    sns.despine(left=True, bottom=True)
+
+    plt.tight_layout()
+
+    if save:
+        filename = f"q-error-{workload}-per-query-no-split-sort-by-mysql.pdf"
+        save_plot(filename)
+        plt.close()
+    else:
+        plt.show()
+
+def plot_q_error_per_query_no_split_sort_by_mscn(workload, save=False):
+    dfs = get_mscn_predictions_dfs(workload)
+    df = dfs[dfs["source"] == "MSCN"]
+    df_mysql = get_mysql_df(workload)
+
+    new_df = pd.merge(df_mysql, df, on="query", suffixes=("_mysql", "_mscn"))
+
+    sorted_df = new_df.sort_values(by="q-error_mscn")
+
+    plt.figure(figsize=(10, 10))
+
+    bar_mysql = sns.barplot(
+        x="q-error_mysql",
+        y="query",
+        data=sorted_df,
+        legend=True,
+        label="MySQL",
+        edgecolor="black",
+        linestyle="dotted",
+    )
+
+    bar_mscn = sns.barplot(
+        x="q-error_mscn",
+        y="query",
+        data=sorted_df,
+        legend=True,
+        label="MSCN",
+        alpha=0.7,
+        edgecolor="black",
+    )
+
+    bar_mscn.set_xlabel("Q-Error")
+    bar_mscn.set_ylabel("Query")
+    bar_mscn.set_xscale("log")
+
+    sns.despine(left=True, bottom=True)
+
+    plt.tight_layout()
+
+    if save:
+        filename = f"q-error-{workload}-per-query-no-split-sort-by-mscn.pdf"
         save_plot(filename)
         plt.close()
     else:
@@ -1314,6 +1406,7 @@ def main():
     save = args.save
 
     job_light = "job-light"
+    job_light_sub_queries = "job-light-sub-queries"
     scale = "scale"
     synthetic = "synthetic"
 
@@ -1323,7 +1416,9 @@ def main():
     # JOB-light
     plot_total_q_error(job_light, save)
     plot_total_q_error_compare_original(job_light, save)
-    plot_q_error_per_query_no_split(job_light, save)
+    plot_q_error_per_query_no_split_sort_by_query(job_light, save)
+    plot_q_error_per_query_no_split_sort_by_mysql(job_light, save)
+    plot_q_error_per_query_no_split_sort_by_mscn(job_light, save)
     plot_q_error_per_query_split(job_light, save)
     plot_q_error_per_query_no_split_compare_original(job_light, save)
     plot_q_error_per_query_split_compare_original(job_light, save)
@@ -1344,6 +1439,13 @@ def main():
     plot_exec_time_top_n_slowest_queries(job_light, 10, save)
     plot_exec_time_top_n_fastest_queries_relative(job_light, 10, save)
     plot_exec_time_top_n_slowest_queries_relative(job_light, 10, save)
+
+    # JOB-light sub-queries
+    plot_total_q_error(job_light_sub_queries, save)
+    plot_q_error_top_n_best_queries(job_light_sub_queries, 10, save)
+    plot_q_error_top_n_worst_queries(job_light_sub_queries, 10, save)
+    plot_q_error_top_n_best_queries_relative(job_light_sub_queries, 10, save)
+    plot_q_error_top_n_worst_queries_relative(job_light_sub_queries, 10, save)
 
     # Scale
     plot_total_q_error(scale, save)
