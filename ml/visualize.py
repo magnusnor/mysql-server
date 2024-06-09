@@ -294,7 +294,9 @@ def plot_q_error_per_query_no_split_sort_by_query(workload, save=False):
 
     sorted_df = new_df.sort_values(by="query", key=lambda x: x.apply(custom_sort))
 
-    plt.figure(figsize=(10, 10))
+    sns.set_context("paper", font_scale=1.5)
+
+    plt.figure(figsize=(15, 15))
 
     bar_mysql = sns.barplot(
         x="q-error_mysql",
@@ -340,7 +342,9 @@ def plot_q_error_per_query_no_split_sort_by_mysql(workload, save=False):
 
     sorted_df = new_df.sort_values(by="q-error_mysql")
 
-    plt.figure(figsize=(10, 10))
+    sns.set_context("paper", font_scale=1.5)
+
+    plt.figure(figsize=(15, 15))
 
     bar_mysql = sns.barplot(
         x="q-error_mysql",
@@ -386,7 +390,9 @@ def plot_q_error_per_query_no_split_sort_by_mscn(workload, save=False):
 
     sorted_df = new_df.sort_values(by="q-error_mscn")
 
-    plt.figure(figsize=(10, 10))
+    sns.set_context("paper", font_scale=1.5)
+
+    plt.figure(figsize=(15, 15))
 
     bar_mysql = sns.barplot(
         x="q-error_mysql",
@@ -433,6 +439,8 @@ def plot_q_error_per_query_split(workload, save=False):
     sorted_df = new_df.sort_values(by="q-error_mysql")
 
     split_dfs, num_rows, num_cols = split_df(sorted_df, 2, 2)
+
+    sns.set_context("paper", font_scale=1.5)
 
     fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
@@ -495,7 +503,9 @@ def plot_q_error_per_query_no_split_compare_original(workload, save=False):
 
     sorted_df = new_df.sort_values(by="query", key=lambda x: x.apply(custom_sort))
 
-    plt.figure(figsize=(10, 10))
+    sns.set_context("paper", font_scale=1.5)
+
+    plt.figure(figsize=(15, 15))
 
     bar_mysql = sns.barplot(
         x="q-error_mysql",
@@ -555,6 +565,8 @@ def plot_q_error_per_query_split_compare_original(workload, save=False):
     sorted_df = new_df.sort_values(by="q-error_mysql")
 
     split_dfs, num_rows, num_cols = split_df(sorted_df, 2, 2)
+
+    sns.set_context("paper", font_scale=1.5)
 
     fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
@@ -861,6 +873,8 @@ def plot_q_error_sub_plans_top_n_best_queries(workload, n, save=False):
     top_n_entries = df[df['Query'].isin(top_n_queries)]
 
     unique_queries = top_n_entries['Query'].unique()
+
+    sns.set_context("paper", font_scale=1.5)
     
     def plot_queries(queries, df):
         fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
@@ -872,7 +886,7 @@ def plot_q_error_sub_plans_top_n_best_queries(workload, n, save=False):
             query_data = df[df['Query'] == query]
             sns.barplot(data=query_data, x="Level", y="Q-Error", hue="Model", hue_order=hue_order, ax=ax)
             ax.set_yscale("log")
-            ax.set_title(f"{query}.sql", fontsize=10)
+            ax.set_title(f"{query}.sql")
             ax.set_xlabel('Level')
             ax.set_ylabel('Q-Error')
             ax.legend().remove()
@@ -906,6 +920,8 @@ def plot_q_error_sub_plans_top_n_worst_queries(workload, n, save=False):
     top_n_entries = df[df['Query'].isin(top_n_queries)]
 
     unique_queries = top_n_entries['Query'].unique()
+
+    sns.set_context("paper", font_scale=1.5)
     
     def plot_queries(queries, df):
         fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
@@ -917,7 +933,7 @@ def plot_q_error_sub_plans_top_n_worst_queries(workload, n, save=False):
             query_data = df[df['Query'] == query]
             sns.barplot(data=query_data, x="Level", y="Q-Error", hue="Model", hue_order=hue_order, ax=ax)
             ax.set_yscale("log")
-            ax.set_title(f"{query}.sql", fontsize=10)
+            ax.set_title(f"{query}.sql")
             ax.set_xlabel('Level')
             ax.set_ylabel('Q-Error')
             ax.legend().remove()
@@ -1107,7 +1123,9 @@ def plot_exec_time_no_split(workload, save=False):
 
         sorted_df = new_df.sort_values(by="median_without")
 
-        plt.figure(figsize=(10, 10))
+        sns.set_context("paper", font_scale=1.5)
+
+        plt.figure(figsize=(15, 15))
 
         bar_without = sns.barplot(
             x="median_without",
@@ -1156,6 +1174,8 @@ def plot_exec_time_split(workload, save=False):
         sorted_df = new_df.sort_values(by="median_without")
 
         split_dfs, num_rows, num_cols = split_df(sorted_df, 2, 2)
+
+        sns.set_context("paper", font_scale=1.5)
 
         fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(15, 5 * num_rows))
         axes = axes.flatten()
