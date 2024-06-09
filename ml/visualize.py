@@ -877,7 +877,7 @@ def plot_q_error_sub_plans_top_n_best_queries(workload, n, save=False):
     sns.set_context("paper", font_scale=1.5)
     
     def plot_queries(queries, df):
-        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 10))
         axes = axes.flatten()
 
         hue_order = ['MySQL', 'MSCN']
@@ -924,7 +924,7 @@ def plot_q_error_sub_plans_top_n_worst_queries(workload, n, save=False):
     sns.set_context("paper", font_scale=1.5)
     
     def plot_queries(queries, df):
-        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 10))
         axes = axes.flatten()
 
         hue_order = ['MySQL', 'MSCN']
