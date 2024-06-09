@@ -184,8 +184,8 @@ def get_mysql_plan_q_errors_df(workload):
                 extracted_values['estimated_rows_original'].append(found_dict['estimated_rows_original'])
 
         for actual, ml, baseline in zip(extracted_values['actual_rows'], extracted_values['estimated_rows_ml'], extracted_values['estimated_rows_original']):
-            q_error_ml = max(actual / ml, ml / actual) if ml else None
-            q_error_original = max(actual / baseline, baseline / actual) if baseline else None
+            q_error_ml = max(actual / ml, ml / actual) if ml and actual else None
+            q_error_original = max(actual / baseline, baseline / actual) if baseline and actual else None
             q_errors['q_error_ml'].append(q_error_ml)
             q_errors['q_error_baseline'].append(q_error_original)
             
@@ -232,8 +232,8 @@ def get_mscn_plan_q_errors_df(workload):
                 extracted_values['estimated_rows_original'].append(found_dict['estimated_rows_original'])
 
         for actual, ml, baseline in zip(extracted_values['actual_rows'], extracted_values['estimated_rows_ml'], extracted_values['estimated_rows_original']):
-            q_error_ml = max(actual / ml, ml / actual) if ml else None
-            q_error_original = max(actual / baseline, baseline / actual) if baseline else None
+            q_error_ml = max(actual / ml, ml / actual) if ml and actual else None
+            q_error_original = max(actual / baseline, baseline / actual) if baseline and actual else None
             q_errors['q_error_ml'].append(q_error_ml)
             q_errors['q_error_baseline'].append(q_error_original)
             
@@ -1149,7 +1149,7 @@ def plot_q_error_sub_plans_levels_per_query(workload, save=False):
     for chunk in chunks_levels:
         plot_levels(chunk, df)
 
-def plot_q_error_sub_plans_levels_for_query(workload, query, save=False):
+def plot_q_error_sub_plans_levels_for_query_mysql_plan(workload, query, save=False):
     df = get_mysql_plan_q_errors_df(workload).sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
 
     df = df.sort_values(by=["Level"])
@@ -1158,15 +1158,42 @@ def plot_q_error_sub_plans_levels_for_query(workload, query, save=False):
 
     query_data = df[df['Query'] == str(query)]
 
+    sns.set_context("paper", font_scale=1.5)
+
     sns.barplot(data=query_data, x="Level", y="Q-Error", hue="Model", hue_order=hue_order)
     plt.yscale("log")
-    plt.title(f"{query}.sql", fontsize=10)
+    plt.title(f"{query}.sql")
     plt.xlabel("Level")
     plt.ylabel("Q-Error")
     plt.tight_layout()
 
     if save:
-        filename = f"q-error-{workload}-sub-plans-levels-for-query-{query}.pdf"
+        filename = f"q-error-{workload}-mysql-sub-plans-levels-for-query-{query}.pdf"
+        save_plot(filename)
+        plt.close()
+    else:
+        plt.show()
+
+def plot_q_error_sub_plans_levels_for_query_mscn_plan(workload, query, save=False):
+    df = get_mscn_plan_q_errors_df(workload).sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
+
+    df = df.sort_values(by=["Level"])
+
+    hue_order = ['MySQL', 'MSCN']
+
+    query_data = df[df['Query'] == str(query)]
+
+    sns.set_context("paper", font_scale=1.5)
+
+    sns.barplot(data=query_data, x="Level", y="Q-Error", hue="Model", hue_order=hue_order)
+    plt.yscale("log")
+    plt.title(f"{query}.sql")
+    plt.xlabel("Level")
+    plt.ylabel("Q-Error")
+    plt.tight_layout()
+
+    if save:
+        filename = f"q-error-{workload}-mscn-sub-plans-levels-for-query-{query}.pdf"
         save_plot(filename)
         plt.close()
     else:
@@ -1567,6 +1594,8 @@ def main():
     plot_exec_time_top_n_slowest_queries("job", 10, save)
     plot_exec_time_top_n_fastest_queries_relative("job", 10, save)
     plot_exec_time_top_n_slowest_queries_relative("job", 10, save)
+    plot_q_error_sub_plans_levels_for_query_mscn_plan("job", "10c", save)
+    plot_q_error_sub_plans_levels_for_query_mysql_plan("job", "10c", save)
 
     # JOB-light
     plot_total_q_error("job-light", save)
