@@ -896,9 +896,11 @@ def plot_q_error_sub_plans_per_query(workload, save=False):
     df = get_mysql_plan_q_errors_df(workload).sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
 
     unique_queries = df['Query'].unique()
+
+    sns.set_context("paper", font_scale=1.5)
     
     def plot_queries(queries, df):
-        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 10))
         axes = axes.flatten()
 
         hue_order = ['MySQL', 'MSCN']
@@ -907,7 +909,7 @@ def plot_q_error_sub_plans_per_query(workload, save=False):
             query_data = df[df['Query'] == query]
             sns.barplot(data=query_data, x="Level", y="Q-Error", hue="Model", hue_order=hue_order, ax=ax)
             ax.set_yscale("log")
-            ax.set_title(f"{query}.sql", fontsize=10)
+            ax.set_title(f"{query}.sql")
             ax.set_xlabel('Level')
             ax.set_ylabel('Q-Error')
             ax.legend().remove()
@@ -1111,6 +1113,8 @@ def plot_q_error_sub_plans_levels_per_query(workload, save=False):
     df = df.sort_values(by=["Level"])
     unique_levels = df['Level'].unique()
 
+    sns.set_context("paper", font_scale=1.5)
+
     def plot_levels(levels, df):
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
         axes = axes.flatten()
@@ -1121,7 +1125,7 @@ def plot_q_error_sub_plans_levels_per_query(workload, save=False):
             level_data = df[df['Level'] == level]
             sns.barplot(data=level_data, x="Query", y="Q-Error", hue="Model", hue_order=hue_order, ax=ax)
             ax.set_yscale('log')
-            ax.set_title(f"Level: {level}", fontsize=10)
+            ax.set_title(f"Level: {level}")
             ax.set_xlabel('Query')
             ax.set_ylabel('Q-Error')
             ax.legend().remove()
