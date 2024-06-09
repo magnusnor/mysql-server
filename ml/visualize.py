@@ -137,6 +137,27 @@ def get_mysql_df_sub_plans(workload):
     ]
     return pd.concat(dfs, ignore_index=True)
 
+def get_mscn_df_sub_plans(workload):
+    results_folder_path = f"{BENCHMARK_RESULTS_PATH}/{workload}/ml_plans"
+    if (not os.path.exists(results_folder_path)):
+        return None
+    
+    data = []
+    for path in pathlib.Path(results_folder_path).glob("*.json"):
+        with open(str(path)) as f:
+            file_content = f.read()
+            json_start_index = file_content.find('EXPLAIN: {')
+
+            if json_start_index != -1:
+                json_content = file_content[json_start_index + len('EXPLAIN: '):]
+                json_data = json.loads(json_content)
+                json_data["query"] = path.stem
+                data.append(json_data)
+    dfs = [
+        pd.json_normalize(query) for query in data
+    ]
+    return pd.concat(dfs, ignore_index=True)
+
 def get_mysql_plan_q_errors_df(workload):
     df = get_mysql_df_sub_plans(workload)
 
@@ -185,6 +206,53 @@ def get_mysql_plan_q_errors_df(workload):
 
     return pd.DataFrame(expanded_data, columns=['Query', 'Model', 'Level', 'Q-Error']).sort_values(by="Query")
 
+def get_mscn_plan_q_errors_df(workload):
+    df = get_mscn_df_sub_plans(workload)
+
+    search_keys = ["actual_rows", "estimated_rows_ml", "estimated_rows_original"]
+    query_plan = df["inputs"].apply(lambda x: find_keys(x, search_keys))
+
+    def extract_q_errors(found_list):
+        extracted_values = {
+            'estimated_rows_ml': [],
+            'estimated_rows_original': [],
+            'actual_rows': [],
+        }
+        q_errors = {
+            'q_error_ml': [],
+            'q_error_baseline': []
+        }
+        
+        for found_dict in found_list:
+            if 'actual_rows' in found_dict:
+                extracted_values['actual_rows'].append(found_dict['actual_rows'])
+            if 'estimated_rows_ml' in found_dict:
+                extracted_values['estimated_rows_ml'].append(found_dict['estimated_rows_ml'])
+            if 'estimated_rows_original' in found_dict:
+                extracted_values['estimated_rows_original'].append(found_dict['estimated_rows_original'])
+
+        for actual, ml, baseline in zip(extracted_values['actual_rows'], extracted_values['estimated_rows_ml'], extracted_values['estimated_rows_original']):
+            q_error_ml = max(actual / ml, ml / actual) if ml else None
+            q_error_original = max(actual / baseline, baseline / actual) if baseline else None
+            q_errors['q_error_ml'].append(q_error_ml)
+            q_errors['q_error_baseline'].append(q_error_original)
+            
+        return q_errors
+
+    df['q_errors'] = query_plan.apply(extract_q_errors)
+
+    df['MySQL'] = df['q_errors'].apply(lambda x: x['q_error_baseline'])
+    df['MSCN'] = df['q_errors'].apply(lambda x: x['q_error_ml'])
+
+    expanded_data = []
+    for i, row in df.iterrows():
+        query = row['query']
+        for level, q_error in enumerate(row['MySQL'], start=1):
+            expanded_data.append([query, 'MySQL', level, q_error])
+        for level, q_error in enumerate(row['MSCN'], start=1):
+            expanded_data.append([query, 'MSCN', level, q_error])
+
+    return pd.DataFrame(expanded_data, columns=['Query', 'Model', 'Level', 'Q-Error']).sort_values(by="Query")
 
 def get_benchmark_timing_dfs(workload):
     results_folder_path = f"{BENCHMARK_RESULTS_PATH}/{workload}/benchmark"
@@ -957,12 +1025,14 @@ def plot_q_error_sub_plans_top_n_worst_queries(workload, n, save=False):
     for chunk in chunks_queries:
         plot_queries(chunk, df)
 
-def plot_total_q_error_sub_plans_levels(workload, save=False):
+def plot_total_q_error_mysql_sub_plans_levels(workload, save=False):
 
     df = get_mysql_plan_q_errors_df(workload).sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
 
     df = df.sort_values(by=["Level"])
     unique_levels = df['Level'].unique()
+
+    sns.set_context("paper", font_scale=1.5)
 
     def plot_levels(levels, df):
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
@@ -975,7 +1045,7 @@ def plot_total_q_error_sub_plans_levels(workload, save=False):
             level_data = df[df['Level'] == level]
             sns.boxplot(data=level_data, x="Model", y="Q-Error", hue="Model", legend=False, hue_order=hue_order, order=order, ax=ax)
             ax.set_yscale('log')
-            ax.set_title(f"Level: {level}", fontsize=10)
+            ax.set_title(f"Level: {level}")
             ax.set_xlabel('')
             ax.set_ylabel('Q-Error')
 
@@ -984,7 +1054,47 @@ def plot_total_q_error_sub_plans_levels(workload, save=False):
 
         plt.tight_layout()
         if save:
-            filename = f"total-q-error-{workload}-sub-plans-levels.pdf"
+            filename = f"total-q-error-{workload}-mysql-sub-plans-levels.pdf"
+            save_plot(filename)
+            plt.close()
+        else:
+            plt.show()
+
+    chunks_levels = [unique_levels[i:i + 4] for i in range(0, len(unique_levels), 4)]
+
+    for chunk in chunks_levels:
+        plot_levels(chunk, df)
+
+def plot_total_q_error_mscn_sub_plans_levels(workload, save=False):
+
+    df = get_mscn_plan_q_errors_df(workload).sort_values(by=["Query"], key=lambda x: x.apply(custom_sort))
+
+    df = df.sort_values(by=["Level"])
+    unique_levels = df['Level'].unique()
+
+    sns.set_context("paper", font_scale=1.5)
+
+    def plot_levels(levels, df):
+        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
+        axes = axes.flatten()
+
+        hue_order = ['MySQL', 'MSCN']
+        order = ['MySQL', 'MSCN']
+
+        for ax, level in zip(axes, levels):
+            level_data = df[df['Level'] == level]
+            sns.boxplot(data=level_data, x="Model", y="Q-Error", hue="Model", legend=False, hue_order=hue_order, order=order, ax=ax)
+            ax.set_yscale('log')
+            ax.set_title(f"Level: {level}")
+            ax.set_xlabel('')
+            ax.set_ylabel('Q-Error')
+
+        for i in range(len(levels), len(axes)):
+            fig.delaxes(axes[i])
+
+        plt.tight_layout()
+        if save:
+            filename = f"total-q-error-{workload}-mscn-sub-plans-levels.pdf"
             save_plot(filename)
             plt.close()
         else:
@@ -1459,7 +1569,8 @@ def main():
     plot_q_error_sub_plans_top_n_best_queries(job_light, 9, save)
     plot_q_error_sub_plans_top_n_worst_queries(job_light, 9, save)
     plot_q_error_sub_plans_per_query(job_light, save)
-    plot_total_q_error_sub_plans_levels(job_light, save)
+    plot_total_q_error_mysql_sub_plans_levels(job_light, save)
+    plot_total_q_error_mscn_sub_plans_levels(job_light, save)
     plot_q_error_sub_plans_levels_per_query(job_light, save)
     plot_q_error_sub_plans_level_trend(job_light, save)
     plot_q_error_correlation(job_light, save)
