@@ -1349,6 +1349,8 @@ def plot_exec_time_top_n_fastest_queries(workload, n, save=False):
 
         sorted_df = new_df.nsmallest(n, "median_with")
 
+        sns.set_context("paper", font_scale=1.5)
+
         bar_without = sns.barplot(
             x="median_without",
             y="query",
@@ -1374,7 +1376,7 @@ def plot_exec_time_top_n_fastest_queries(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.3, 1))
+        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
 
         plt.tight_layout()
 
@@ -1399,6 +1401,8 @@ def plot_exec_time_top_n_slowest_queries(workload, n, save=False):
 
         sorted_df = new_df.nlargest(n, "median_with")
 
+        sns.set_context("paper", font_scale=1.5)
+
         bar_without = sns.barplot(
             x="median_without",
             y="query",
@@ -1424,7 +1428,7 @@ def plot_exec_time_top_n_slowest_queries(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.3, 1))
+        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
 
         plt.tight_layout()
 
@@ -1451,6 +1455,8 @@ def plot_exec_time_top_n_fastest_queries_relative(workload, n, save=False):
 
         sorted_df = new_df.nsmallest(n, "relative_difference")
 
+        sns.set_context("paper", font_scale=1.5)
+
         bar_without = sns.barplot(
             x="median_without",
             y="query",
@@ -1476,7 +1482,7 @@ def plot_exec_time_top_n_fastest_queries_relative(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.3, 1))
+        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
 
         plt.tight_layout()
 
@@ -1503,6 +1509,8 @@ def plot_exec_time_top_n_slowest_queries_relative(workload, n, save=False):
 
         sorted_df = new_df.nlargest(n, "relative_difference")
 
+        sns.set_context("paper", font_scale=1.5)
+
         bar_without = sns.barplot(
             x="median_without",
             y="query",
@@ -1528,7 +1536,7 @@ def plot_exec_time_top_n_slowest_queries_relative(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.3, 1))
+        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
 
         plt.tight_layout()
 
