@@ -8,6 +8,7 @@ import re
 import pandas as pd
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import seaborn as sns
 
 from dotenv import load_dotenv
@@ -374,6 +375,7 @@ def plot_q_error_per_query_no_split_sort_by_query(workload, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -384,6 +386,7 @@ def plot_q_error_per_query_no_split_sort_by_query(workload, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     bar_mscn.set_xlabel("Q-Error")
@@ -422,6 +425,7 @@ def plot_q_error_per_query_no_split_sort_by_mysql(workload, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -432,6 +436,7 @@ def plot_q_error_per_query_no_split_sort_by_mysql(workload, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     bar_mscn.set_xlabel("Q-Error")
@@ -470,6 +475,7 @@ def plot_q_error_per_query_no_split_sort_by_mscn(workload, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -480,6 +486,7 @@ def plot_q_error_per_query_no_split_sort_by_mscn(workload, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     bar_mscn.set_xlabel("Q-Error")
@@ -522,6 +529,7 @@ def plot_q_error_per_query_split(workload, save=False):
             edgecolor="black",
             linestyle="dotted",
             ax=ax,
+            hatch="/",
         )
 
         bar_mscn = sns.barplot(
@@ -533,6 +541,7 @@ def plot_q_error_per_query_split(workload, save=False):
             alpha=0.7,
             edgecolor="black",
             ax=ax,
+            hatch="|",
         )
 
         bar_mscn.set_xscale("log")
@@ -583,6 +592,7 @@ def plot_q_error_per_query_no_split_compare_original(workload, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -593,6 +603,7 @@ def plot_q_error_per_query_no_split_compare_original(workload, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     bar_mscn_original = sns.barplot(
@@ -603,6 +614,7 @@ def plot_q_error_per_query_no_split_compare_original(workload, save=False):
         label="MSCN-original",
         alpha=0.7,
         edgecolor="black",
+        hatch="\\",
     )
 
     bar_mscn_original.set_xlabel("Q-Error")
@@ -647,7 +659,8 @@ def plot_q_error_per_query_split_compare_original(workload, save=False):
             label="MySQL",
             edgecolor="black",
             linestyle="dotted",
-            ax=ax
+            ax=ax,
+            hatch="/",
         )
 
         bar_mscn = sns.barplot(
@@ -659,6 +672,7 @@ def plot_q_error_per_query_split_compare_original(workload, save=False):
             alpha=0.7,
             edgecolor="black",
             ax=ax,
+            hatch="|",
         )
 
         bar_mscn_original = sns.barplot(
@@ -670,6 +684,7 @@ def plot_q_error_per_query_split_compare_original(workload, save=False):
             alpha=0.7,
             edgecolor="black",
             ax=ax,
+            hatch="\\",
         )
 
         bar_mscn_original.set_xscale("log")
@@ -707,6 +722,7 @@ def plot_q_error_top_n_best_queries(workload, n, save=False):
     sorted_df = new_df.sort_values(by="q-error_mscn").head(n)
     sorted_df_mysql = new_df.sort_values(by="q-error_mysql").head(n)
 
+    print(f"Workload: {workload}")
     print(f"Sorted by MSCN: {sorted_df.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
     print(f"Sorted by MySQL: {sorted_df_mysql.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
 
@@ -718,6 +734,7 @@ def plot_q_error_top_n_best_queries(workload, n, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -728,11 +745,12 @@ def plot_q_error_top_n_best_queries(workload, n, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     handles, labels = bar_mysql.get_legend_handles_labels()
 
-    plt.legend(handles, labels, loc='upper right', title='Model', bbox_to_anchor=(1.25, 1))
+    plt.legend(handles, labels, loc='upper center', title='Model', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
     plt.xlabel("Q-Error")
     plt.ylabel("Query")
@@ -765,6 +783,7 @@ def plot_q_error_top_n_best_queries_relative(workload, n, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -775,11 +794,12 @@ def plot_q_error_top_n_best_queries_relative(workload, n, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     handles, labels = bar_mysql.get_legend_handles_labels()
 
-    plt.legend(handles, labels, loc='upper right', title='Model', bbox_to_anchor=(1.25, 1))
+    plt.legend(handles, labels, loc='upper center', title='Model', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
     plt.xlabel("Q-Error")
     plt.ylabel("Query")
@@ -804,6 +824,7 @@ def plot_q_error_top_n_worst_queries(workload, n, save=False):
     sorted_df = new_df.sort_values(by="q-error_mscn", ascending=False).head(n)
     sorted_df_mysql = new_df.sort_values(by="q-error_mysql", ascending=False).head(n)
 
+    print(f"Workload: {workload}")
     print(f"Sorted by MSCN: {sorted_df.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
     print(f"Sorted by MySQL: {sorted_df_mysql.round({'q-error_mysql': 3, 'q-error_mscn': 3})}")
 
@@ -815,6 +836,7 @@ def plot_q_error_top_n_worst_queries(workload, n, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -825,11 +847,12 @@ def plot_q_error_top_n_worst_queries(workload, n, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     handles, labels = bar_mysql.get_legend_handles_labels()
 
-    plt.legend(handles, labels, loc='upper right', title='Model', bbox_to_anchor=(1.25, 1))
+    plt.legend(handles, labels, loc='upper center', title='Model', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
     plt.xlabel("Q-Error")
     plt.ylabel("Query")
@@ -862,6 +885,7 @@ def plot_q_error_top_n_worst_queries_relative(workload, n, save=False):
         label="MySQL",
         edgecolor="black",
         linestyle="dotted",
+        hatch="/",
     )
 
     bar_mscn = sns.barplot(
@@ -872,11 +896,12 @@ def plot_q_error_top_n_worst_queries_relative(workload, n, save=False):
         label="MSCN",
         alpha=0.7,
         edgecolor="black",
+        hatch="|",
     )
 
     handles, labels = bar_mysql.get_legend_handles_labels()
 
-    plt.legend(handles, labels, loc='upper right', title='Model', bbox_to_anchor=(1.25, 1))
+    plt.legend(handles, labels, loc='upper center', title='Model', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
     plt.xlabel("Q-Error")
     plt.ylabel("Query")
@@ -1206,6 +1231,7 @@ def plot_q_error_sub_plans_level_trend(workload, save=False):
     hue_order = ["MySQL", "MSCN"]
 
     sns.lineplot(data=df, x="Level", y="Q-Error", hue="Model", style="Model", markers=['o', 's'], hue_order=hue_order)
+    plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.yscale("log")
     plt.tight_layout()
     if save:
@@ -1273,9 +1299,10 @@ def plot_exec_time_no_split(workload, save=False):
             y="query",
             data=sorted_df,
             legend=True,
-            label="Without",
+            label="Without MSCN",
             edgecolor="black",
             linestyle="dotted",
+            hatch="/",
         )
 
         bar_with = sns.barplot(
@@ -1283,9 +1310,10 @@ def plot_exec_time_no_split(workload, save=False):
             y="query",
             data=sorted_df,
             legend=True,
-            label="With",
+            label="With MSCN",
             alpha=0.7,
             edgecolor="black",
+            hatch="|",
         )
         bar_with.set_xlabel("Median seconds")
         bar_with.set_ylabel("Query")
@@ -1326,10 +1354,11 @@ def plot_exec_time_split(workload, save=False):
                 y="query",
                 data=part_df,
                 legend=False,
-                label="Without",
+                label="Without MSCN",
                 edgecolor="black",
                 linestyle="dotted",
                 ax=ax,
+                hatch="/",
             )
 
             bar_with = sns.barplot(
@@ -1337,10 +1366,11 @@ def plot_exec_time_split(workload, save=False):
                 y="query",
                 data=part_df,
                 legend=False,
-                label="With",
+                label="With MSCN",
                 alpha=0.7,
                 edgecolor="black",
-                ax=ax, 
+                ax=ax,
+                hatch="|",
             )
             bar_with.set_xlabel("Median seconds")
             bar_with.set_ylabel("Query")
@@ -1387,9 +1417,10 @@ def plot_exec_time_top_n_fastest_queries(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="Without",
+            label="Without MSCN",
             edgecolor="black",
             linestyle="dotted",
+            hatch="/",
         )
 
         bar_with = sns.barplot(
@@ -1397,9 +1428,10 @@ def plot_exec_time_top_n_fastest_queries(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="With",
+            label="With MSCN",
             alpha=0.7,
             edgecolor="black",
+            hatch="|",
         )
 
         bar_with.set_xlabel("Median seconds")
@@ -1407,7 +1439,7 @@ def plot_exec_time_top_n_fastest_queries(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
+        plt.legend(handles, labels, loc='upper center', title='Command', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
         plt.tight_layout()
 
@@ -1439,9 +1471,10 @@ def plot_exec_time_top_n_slowest_queries(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="Without",
+            label="Without MSCN",
             edgecolor="black",
             linestyle="dotted",
+            hatch="/",
         )
 
         bar_with = sns.barplot(
@@ -1449,9 +1482,10 @@ def plot_exec_time_top_n_slowest_queries(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="With",
+            label="With MSCN",
             alpha=0.7,
             edgecolor="black",
+            hatch="|",
         )
 
         bar_with.set_xlabel("Median seconds")
@@ -1459,7 +1493,7 @@ def plot_exec_time_top_n_slowest_queries(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
+        plt.legend(handles, labels, loc='upper center', title='Command', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
         plt.tight_layout()
 
@@ -1493,9 +1527,10 @@ def plot_exec_time_top_n_fastest_queries_relative(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="Without",
+            label="Without MSCN",
             edgecolor="black",
             linestyle="dotted",
+            hatch="/",
         )
 
         bar_with = sns.barplot(
@@ -1503,9 +1538,10 @@ def plot_exec_time_top_n_fastest_queries_relative(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="With",
+            label="With MSCN",
             alpha=0.7,
             edgecolor="black",
+            hatch="|",
         )
 
         bar_with.set_xlabel("Median seconds")
@@ -1513,7 +1549,7 @@ def plot_exec_time_top_n_fastest_queries_relative(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
+        plt.legend(handles, labels, loc='upper center', title='Command', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
         plt.tight_layout()
 
@@ -1547,9 +1583,10 @@ def plot_exec_time_top_n_slowest_queries_relative(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="Without",
+            label="Without MSCN",
             edgecolor="black",
             linestyle="dotted",
+            hatch="/",
         )
 
         bar_with = sns.barplot(
@@ -1557,9 +1594,10 @@ def plot_exec_time_top_n_slowest_queries_relative(workload, n, save=False):
             y="query",
             data=sorted_df,
             legend=False,
-            label="With",
+            label="With MSCN",
             alpha=0.7,
             edgecolor="black",
+            hatch="|",
         )
 
         bar_with.set_xlabel("Median seconds")
@@ -1567,7 +1605,7 @@ def plot_exec_time_top_n_slowest_queries_relative(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper right', title='Command', bbox_to_anchor=(1.5, 1))
+        plt.legend(handles, labels, loc='upper center', title='Command', bbox_to_anchor=(0.5, 1.3), prop={'size': 10})
 
         plt.tight_layout()
 
