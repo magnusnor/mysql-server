@@ -1431,7 +1431,7 @@ def plot_exec_time_top_n_fastest_queries(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.125))
+        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.3))
 
         plt.tight_layout()
 
@@ -1485,7 +1485,7 @@ def plot_exec_time_top_n_slowest_queries(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.125))
+        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.3))
 
         plt.tight_layout()
 
@@ -1541,7 +1541,7 @@ def plot_exec_time_top_n_fastest_queries_relative(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.125))
+        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.3))
 
         plt.tight_layout()
 
@@ -1597,7 +1597,7 @@ def plot_exec_time_top_n_slowest_queries_relative(workload, n, save=False):
 
         handles, labels = bar_with.get_legend_handles_labels()
 
-        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.125))
+        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 1.3))
 
         plt.tight_layout()
 
@@ -1615,39 +1615,39 @@ def main():
     save = args.save
 
     # Model Training
-    # plot_model_training(save)
+    plot_model_training(save)
 
     # JOB
-    # plot_exec_time_no_split("job", save)
-    # plot_exec_time_split("job", save)
-    # plot_exec_time_top_n_fastest_queries("job", 10, save)
-    # plot_exec_time_top_n_slowest_queries("job", 10, save)
-    # plot_exec_time_top_n_fastest_queries_relative("job", 10, save)
-    # plot_exec_time_top_n_slowest_queries_relative("job", 10, save)
-    # plot_q_error_sub_plans_levels_for_query_mscn_plan("job", "10c", save)
-    # plot_q_error_sub_plans_levels_for_query_mysql_plan("job", "10c", save)
+    plot_exec_time_no_split("job", save)
+    plot_exec_time_split("job", save)
+    plot_exec_time_top_n_fastest_queries("job", 10, save)
+    plot_exec_time_top_n_slowest_queries("job", 10, save)
+    plot_exec_time_top_n_fastest_queries_relative("job", 10, save)
+    plot_exec_time_top_n_slowest_queries_relative("job", 10, save)
+    plot_q_error_sub_plans_levels_for_query_mscn_plan("job", "10c", save)
+    plot_q_error_sub_plans_levels_for_query_mysql_plan("job", "10c", save)
 
     # JOB-light
-    # plot_total_q_error("job-light", save)
-    # plot_total_q_error_compare_original("job-light", save)
-    # plot_q_error_per_query_no_split_sort_by_query("job-light", save)
-    # plot_q_error_per_query_no_split_sort_by_mysql("job-light", save)
-    # plot_q_error_per_query_no_split_sort_by_mscn("job-light", save)
-    # plot_q_error_per_query_split("job-light", save)
-    # plot_q_error_per_query_no_split_compare_original("job-light", save)
-    # plot_q_error_per_query_split_compare_original("job-light", save)
-    # plot_q_error_top_n_best_queries("job-light", 10, save)
-    # plot_q_error_top_n_worst_queries("job-light", 10, save)
-    # plot_q_error_top_n_best_queries_relative("job-light", 10, save)
-    # plot_q_error_top_n_worst_queries_relative("job-light", 10, save)
-    # plot_q_error_sub_plans_top_n_best_queries("job-light", 9, save)
-    # plot_q_error_sub_plans_top_n_worst_queries("job-light", 9, save)
-    # plot_q_error_sub_plans_per_query("job-light", save)
-    # plot_total_q_error_mysql_sub_plans_levels("job-light", save)
-    # plot_total_q_error_mscn_sub_plans_levels("job-light", save)
-    # plot_q_error_sub_plans_levels_per_query("job-light", save)
-    # plot_q_error_sub_plans_level_trend("job-light", save)
-    # plot_q_error_correlation("job-light", save)
+    plot_total_q_error("job-light", save)
+    plot_total_q_error_compare_original("job-light", save)
+    plot_q_error_per_query_no_split_sort_by_query("job-light", save)
+    plot_q_error_per_query_no_split_sort_by_mysql("job-light", save)
+    plot_q_error_per_query_no_split_sort_by_mscn("job-light", save)
+    plot_q_error_per_query_split("job-light", save)
+    plot_q_error_per_query_no_split_compare_original("job-light", save)
+    plot_q_error_per_query_split_compare_original("job-light", save)
+    plot_q_error_top_n_best_queries("job-light", 10, save)
+    plot_q_error_top_n_worst_queries("job-light", 10, save)
+    plot_q_error_top_n_best_queries_relative("job-light", 10, save)
+    plot_q_error_top_n_worst_queries_relative("job-light", 10, save)
+    plot_q_error_sub_plans_top_n_best_queries("job-light", 9, save)
+    plot_q_error_sub_plans_top_n_worst_queries("job-light", 9, save)
+    plot_q_error_sub_plans_per_query("job-light", save)
+    plot_total_q_error_mysql_sub_plans_levels("job-light", save)
+    plot_total_q_error_mscn_sub_plans_levels("job-light", save)
+    plot_q_error_sub_plans_levels_per_query("job-light", save)
+    plot_q_error_sub_plans_level_trend("job-light", save)
+    plot_q_error_correlation("job-light", save)
     plot_exec_time_no_split("job-light", save)
     plot_exec_time_split("job-light", save)
     plot_exec_time_top_n_fastest_queries("job-light", 10, save)
@@ -1656,27 +1656,27 @@ def main():
     plot_exec_time_top_n_slowest_queries_relative("job-light", 10, save)
 
     # JOB-light sub-queries
-    # plot_total_q_error("job-light-sub-queries", save)
-    # plot_q_error_top_n_best_queries("job-light-sub-queries", 10, save)
-    # plot_q_error_top_n_worst_queries("job-light-sub-queries", 10, save)
-    # plot_q_error_top_n_best_queries_relative("job-light-sub-queries", 10, save)
-    # plot_q_error_top_n_worst_queries_relative("job-light-sub-queries", 10, save)
+    plot_total_q_error("job-light-sub-queries", save)
+    plot_q_error_top_n_best_queries("job-light-sub-queries", 10, save)
+    plot_q_error_top_n_worst_queries("job-light-sub-queries", 10, save)
+    plot_q_error_top_n_best_queries_relative("job-light-sub-queries", 10, save)
+    plot_q_error_top_n_worst_queries_relative("job-light-sub-queries", 10, save)
 
     # Scale
-    # plot_total_q_error("scale", save)
-    # plot_total_q_error_compare_original("scale", save)
-    # plot_q_error_top_n_best_queries("scale", 10, save)
-    # plot_q_error_top_n_worst_queries("scale", 10, save)
-    # plot_q_error_top_n_best_queries_relative("scale", 10, save)
-    # plot_q_error_top_n_worst_queries_relative("scale", 10, save)
+    plot_total_q_error("scale", save)
+    plot_total_q_error_compare_original("scale", save)
+    plot_q_error_top_n_best_queries("scale", 10, save)
+    plot_q_error_top_n_worst_queries("scale", 10, save)
+    plot_q_error_top_n_best_queries_relative("scale", 10, save)
+    plot_q_error_top_n_worst_queries_relative("scale", 10, save)
 
     # Synthetic
-    # plot_total_q_error("synthetic", save)
-    # plot_total_q_error_compare_original("synthetic", save)
-    # plot_q_error_top_n_best_queries("synthetic", 10, save)
-    # plot_q_error_top_n_worst_queries("synthetic", 10, save)
-    # plot_q_error_top_n_best_queries_relative("synthetic", 10, save)
-    # plot_q_error_top_n_worst_queries_relative("synthetic", 10, save)
+    plot_total_q_error("synthetic", save)
+    plot_total_q_error_compare_original("synthetic", save)
+    plot_q_error_top_n_best_queries("synthetic", 10, save)
+    plot_q_error_top_n_worst_queries("synthetic", 10, save)
+    plot_q_error_top_n_best_queries_relative("synthetic", 10, save)
+    plot_q_error_top_n_worst_queries_relative("synthetic", 10, save)
 
 if __name__ == "__main__":
     main()

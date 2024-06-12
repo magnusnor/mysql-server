@@ -164,8 +164,6 @@ def predict_query(query, batch_size=1024, cuda=False):
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
-    # logger.info(f"Loaded checkpoint from {os.path.abspath(checkpoint_path)}")
-
     column_min_max_vals = checkpoint["column_min_max_vals"]
     max_num_joins = checkpoint["max_num_joins"]
     max_num_predicates = checkpoint["max_num_predicates"]
@@ -188,11 +186,6 @@ def predict_query(query, batch_size=1024, cuda=False):
 
     prediction_norm, _ = run_inference_on_query(model, data_loader, cuda=cuda)
     cardinality_estimate = unnormalize_labels(prediction_norm, min_val, max_val)[0]
-
-    # t_total_ms = t_total*1000
-    
-    # logger.info(f"Inference time (ms): {t_total_ms}")
-    # logger.info(f"Cardinality estimate: {cardinality_estimate}")
 
     return cardinality_estimate
 
