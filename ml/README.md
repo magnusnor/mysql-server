@@ -103,6 +103,16 @@ python predict.py job-light
 
 ### Learned Cardinality Estimation in MySQL
 
+Ensure that the correct absolute paths for the `server.py` and the Python executable has been set in `../sql/mysqld.cc`:
+
+```cpp
+#ifdef WITH_HYPERGRAPH_OPTIMIZER
+  std::thread ml_thread(start_ml_server, "/path/to/python/executable",
+                        "/path/to/mysql-server/ml/server.py &");
+  ml_thread.detach();
+#endif
+```
+
 Start the MySQL Test Framework Client:
 
 ```
